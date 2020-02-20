@@ -1,6 +1,6 @@
 {
 	"name": "@lume/variable",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"description": "Create and react to reactive variables.",
 	"type": "module",
 	"main": "dist/index.js",
