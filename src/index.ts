@@ -1,4 +1,4 @@
-import {createSignal, createEffect} from 'solid-js'
+import {createSignal, createEffect, createRoot} from 'solid-js'
 
 export interface ReactiveVariable<T> {
 	(value?: undefined): T
@@ -29,13 +29,28 @@ export function variable<T>(value: T) {
 	return variable
 }
 
+export type Computation = (previousValue?: unknown) => unknown
+export type StopFunction = () => void
+
 /**
  * Automatically run a "computation" when any reactive variable used inside the
  * computation has changed. The "computation" is a function passed into
  * autorun().
+ *
+ * @param {Computation} f - A "computation" to re-run when any of the reactive
+ * variables used inside of it change.
+ * @return {StopFunction} - Returns a function that can be called to explicitly
+ * stop the computation from running, allowing it to be garbage collected.
  */
-export function autorun(f: (v?: unknown) => unknown): void {
-	createEffect(f)
+export function autorun(f: Computation): StopFunction {
+	let stop: StopFunction
+
+	createRoot(dispose => {
+		stop = dispose
+		createEffect(f)
+	})
+
+	return stop!
 }
 
 function __getReactiveVar<T>(instance: Object, vName: string, initialValue: T = undefined!): ReactiveVariable<T> {
