@@ -1,0 +1,66 @@
+{
+	"name": "@lume/variable",
+	"version": "0.0.0",
+	"description": "Create and react to reactive variables.",
+	"type": "module",
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"exports COMMENT:": "This removes 'dist' from import statements, as well as replaces the 'main' field. See https://github.com/nodejs/node/issues/14970#issuecomment-571887546",
+	"exports": {
+		".": "./dist/index.js",
+		"./": "./dist/"
+	},
+	"scripts": {
+		"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX BUILDER SCRIPTS": "",
+		"test": "LOCAL_DEV=true builder run npm:test",
+		"test:debug": "LOCAL_DEV=true builder run npm:test-debug",
+		"tsc": "LOCAL_DEV=true builder run tsc",
+		"tsc:watch": "LOCAL_DEV=true builder run tsc:watch",
+		"prettier": "LOCAL_DEV=true builder run prettier",
+		"release:patch": "LOCAL_DEV=true builder run release:patch",
+		"release:minor": "LOCAL_DEV=true builder run release:minor",
+		"release:major": "LOCAL_DEV=true builder run release:major",
+		"version": "LOCAL_DEV=true builder run npm:version",
+		"postversion": "LOCAL_DEV=true builder run npm:postversion",
+		"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX LUME SCRIPTS": "",
+		"clean": "lume clean",
+		"build": "lume build",
+		"dev": "lume dev",
+		"typecheck": "lume typecheck",
+		"typecheck:watch": "lume typecheckWatch",
+		"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX OTHER SCRIPTS": ""
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+ssh://git@github.com/infamous/variable.git"
+	},
+	"author": "Joe Pea <joe@trusktr.io>",
+	"license": "MIT",
+	"bugs": {
+		"url": "https://github.com/infamous/variable/issues"
+	},
+	"homepage": "http://github.com/infamous/variable#readme",
+	"dependencies": {
+		"@babel/runtime": "7.0.0-beta.46",
+		"solid-js": "^0.16.8"
+	},
+	"devDependencies": {
+		"builder": "^5.0.0",
+		"builder-js-package": "^1.0.0",
+		"prettier": "^1.19.1"
+	},
+	"keywords": [
+		"frp",
+		"functional reactive programming",
+		"functional-reactive-programming",
+		"reactive programming",
+		"reactive-programming",
+		"reactive coding",
+		"reactive-coding",
+		"reactive variables",
+		"reactive-variables",
+		"reactivity",
+		"reactive computation",
+		"reactive-computation"
+	]
+}
