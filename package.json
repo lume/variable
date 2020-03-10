@@ -2,6 +2,9 @@
 	"name": "@lume/variable",
 	"version": "0.0.2",
 	"description": "Create and react to reactive variables.",
+	"author": "Joe Pea <joe@trusktr.io>",
+	"license": "MIT",
+	"homepage": "http://github.com/infamous/variable#readme",
 	"type": "module",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -11,43 +14,36 @@
 		"./": "./dist/"
 	},
 	"scripts": {
-		"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX BUILDER SCRIPTS": "",
-		"test": "LOCAL_DEV=true builder run npm:test",
-		"test:debug": "LOCAL_DEV=true builder run npm:test-debug",
-		"tsc": "LOCAL_DEV=true builder run tsc",
-		"tsc:watch": "LOCAL_DEV=true builder run tsc:watch",
-		"prettier": "LOCAL_DEV=true builder run prettier",
-		"version": "LOCAL_DEV=true builder run npm:version",
-		"postversion": "LOCAL_DEV=true builder run npm:postversion",
-		"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX LUME SCRIPTS": "",
+		"LUME SCRIPTS XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX": "",
 		"clean": "lume clean",
 		"build": "lume build",
 		"dev": "lume dev",
 		"typecheck": "lume typecheck",
 		"typecheck:watch": "lume typecheckWatch",
+		"test": "lume test",
+		"test:debug": "lume testDebug",
+		"prettier": "lume prettier",
+		"prettier:check": "lume prettierCheck",
 		"release:patch": "lume releasePatch",
 		"release:minor": "lume releaseMinor",
 		"release:major": "lume releaseMajor",
+		"version": "lume versionHook",
+		"postversion": "lume postVersionHook",
 		"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX OTHER SCRIPTS": ""
+	},
+	"dependencies": {
+		"solid-js": "^0.16.8"
+	},
+	"devDependencies": {
+		"builder-js-package": "^1.0.0",
+		"prettier": "^1.19.1"
 	},
 	"repository": {
 		"type": "git",
 		"url": "git+ssh://git@github.com/infamous/variable.git"
 	},
-	"author": "Joe Pea <joe@trusktr.io>",
-	"license": "MIT",
 	"bugs": {
 		"url": "https://github.com/infamous/variable/issues"
-	},
-	"homepage": "http://github.com/infamous/variable#readme",
-	"dependencies": {
-		"@babel/runtime": "7.0.0-beta.46",
-		"solid-js": "^0.16.8"
-	},
-	"devDependencies": {
-		"builder": "^5.0.0",
-		"builder-js-package": "^1.0.0",
-		"prettier": "^1.19.1"
 	},
 	"keywords": [
 		"frp",
