@@ -32,7 +32,7 @@
 		"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX OTHER SCRIPTS": ""
 	},
 	"dependencies": {
-		"solid-js": "^0.16.8"
+		"solid-js": "^0.18.0"
 	},
 	"devDependencies": {
 		"@lume/cli": "^2.0.0",
