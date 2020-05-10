@@ -1,5 +1,7 @@
 import {createSignal, createEffect, createRoot} from 'solid-js'
 
+export * from 'solid-js/dom'
+
 export interface ReactiveVariable<T> {
 	(value?: undefined): T
 	(value: T): void
