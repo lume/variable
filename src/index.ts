@@ -153,4 +153,4 @@ export function reactive<T>(prototype: any, name: string, descriptor?: PropertyD
 	// This will change with updates to the ES decorators proposal, https://github.com/tc39/proposal-decorators
 }
 
-export const version = '0.0.4'
+export const version = '0.0.5'
