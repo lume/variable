@@ -8,6 +8,30 @@ export interface ReactiveVariable<T> {
 	(value: T): void
 }
 
+/** Represents a reactive variable. The value is set or gotten depending on passing an arg or no arg. */
+export interface Variable<T = any> {
+	/** Gets the variable value. */
+	(value?: undefined): T
+	/** Sets the variable value. */
+	(value: T): T
+	(value?: T): void | T
+
+	get(): T
+	set(value: T): T
+
+	// TODO, for array destructuring convenience
+	// [0](): T
+	// [1](value: T): T
+	// [Symbol.iterator]() {...}
+}
+
+function readVariable<T>(this: Variable<T>): T {
+	return this()
+}
+function writeVariable<T>(this: Variable<T>, value: T): T {
+	return this(value)
+}
+
 /**
  * Create a reactive variable.
  *
@@ -22,12 +46,18 @@ export interface ReactiveVariable<T> {
 export function variable<T>(value: T) {
 	const [get, set] = createSignal<T>(value)
 
-	function variable(value?: undefined): T
-	function variable(value: T): void
-	function variable(value?: T): void | T {
+	const variable: Variable<T> = (value?: T) => {
 		if (typeof value === 'undefined') return get()
 		set(value)
+		return value
 	}
+
+	// WTF TypeScript, why do I need `any` here.
+	variable.get = readVariable.bind(variable as any) as any
+	variable.set = writeVariable.bind(variable as any) as any
+	// TODO, for array destructuring convenience
+	// variable[0] = read.bind(variable as any) as any
+	// variable[1] = write.bind(variable as any) as any
 
 	return variable
 }
