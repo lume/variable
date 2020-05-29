@@ -4,7 +4,7 @@
 	"description": "Create and react to reactive variables.",
 	"author": "Joe Pea <joe@trusktr.io>",
 	"license": "MIT",
-	"homepage": "http://github.com/infamous/variable#readme",
+	"homepage": "http://github.com/lume/variable#readme",
 	"type": "module",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -40,10 +40,10 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+ssh://git@github.com/infamous/variable.git"
+		"url": "git+ssh://git@github.com/lume/variable.git"
 	},
 	"bugs": {
-		"url": "https://github.com/infamous/variable/issues"
+		"url": "https://github.com/lume/variable/issues"
 	},
 	"keywords": [
 		"frp",
