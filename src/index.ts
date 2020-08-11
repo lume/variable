@@ -75,6 +75,9 @@ export type StopFunction = () => void
  * @return {StopFunction} - Returns a function that can be called to explicitly
  * stop the computation from running, allowing it to be garbage collected.
  */
+// TODO Option for autorun() to batch updates into a single update in the next microtask.
+// TODO Option for autorun() to skip the first run.
+// TODO Option for autorun() to provide which properties caused the re-run.
 export function autorun(f: Computation): StopFunction {
 	let stop: StopFunction
 
@@ -101,7 +104,7 @@ function __getReactiveVar<T>(instance: Object, vName: string, initialValue: T = 
 export function reactive<T>(prototype: any, name: string, descriptor?: PropertyDescriptor): any {
 	const vName = 'v_' + name
 
-	// property decorators are not passed a prototype (unlike decorators on accessors or methods)
+	// property decorators are not passed a descriptor (unlike decorators on accessors or methods)
 	let calledAsPropertyDecorator = false
 
 	if (!descriptor) {
@@ -114,6 +117,10 @@ export function reactive<T>(prototype: any, name: string, descriptor?: PropertyD
 	let initialValue: T
 	let writable: boolean | undefined
 
+	// TODO if there is an inherited accessor, we need to ensure we still call
+	// it so that we're extending instead of overriding. Otherwise placing
+	// @reactive on a property will break that functionality in those cases.
+
 	if (descriptor) {
 		if (descriptor.get || descriptor.set) {
 			originalGet = descriptor.get
@@ -122,9 +129,9 @@ export function reactive<T>(prototype: any, name: string, descriptor?: PropertyD
 			// reactivity requires both
 			if (!originalGet || !originalSet) {
 				console.warn(
-					'The `@reactive` decorator was used on an accessor named ' +
+					'The `@reactive` decorator was used on an accessor named "' +
 						name +
-						' which had a getter or a setter, but not both. Reactivity on accessors works only when accessors have both get and set.',
+						'" which had a getter or a setter, but not both. Reactivity on accessors works only when accessors have both get and set. In this case the decorator does not do anything.',
 				)
 				return
 			}
@@ -153,6 +160,8 @@ export function reactive<T>(prototype: any, name: string, descriptor?: PropertyD
 
 	descriptor = {
 		...descriptor,
+		// XXX should we throw an error if descriptor.configurable is false?
+		configurable: true,
 		get(): T {
 			// initialValue could be undefined
 			const v = __getReactiveVar<T>(this, vName, initialValue)
