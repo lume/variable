@@ -32,6 +32,7 @@
 		"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX OTHER SCRIPTS": ""
 	},
 	"dependencies": {
+		"lit-dom-expressions": "^0.19.10",
 		"solid-js": "0.18.0"
 	},
 	"devDependencies": {
