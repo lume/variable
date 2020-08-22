@@ -31,7 +31,9 @@
 		"postversion": "lume postVersionHook",
 		"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX OTHER SCRIPTS": ""
 	},
+	"COMMENT dependencies": "dom-expressions shouldn't be a direct dependency, but needs to be for now due to https://github.com/ryansolid/dom-expressions/issues/25",
 	"dependencies": {
+		"dom-expressions": "^0.19.10",
 		"lit-dom-expressions": "^0.19.10",
 		"solid-js": "0.18.0"
 	},

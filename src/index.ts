@@ -7,7 +7,8 @@ export * from 'solid-js'
 // @lume/element depends on @lume/variable, we stuck these here to avoid the
 // duplicate-module issues.
 export * from 'solid-js/dom'
-export * from 'solid-js/html'
+import html from 'solid-js/html'
+export {html}
 
 export interface ReactiveVariable<T> {
 	(value?: undefined): T
