@@ -10,6 +10,7 @@
 		"lib": ["dom", "es2018"],
 		"target": "es2018",
 		"module": "esnext",
-		"noEmitOnError": false
+		"noEmitOnError": false,
+		"useDefineForClassFields": true
 	}
 }

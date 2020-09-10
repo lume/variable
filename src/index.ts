@@ -108,10 +108,46 @@ function __getReactiveVar<T>(instance: Object, vName: string, initialValue: T = 
 	return v
 }
 
-export function reactive<T>(prototype: any, name: string, descriptor?: PropertyDescriptor): any {
+export function reactive(protoOrClassElement: any, name?: string, descriptor?: PropertyDescriptor): any {
+	const isDecoratorV2 = arguments.length === 1 && 'kind' in protoOrClassElement
+
+	if (isDecoratorV2) {
+		const classElement = protoOrClassElement
+
+		return {
+			...classElement,
+			finisher(Class: AnyClass) {
+				_reactive(Class.prototype, classElement.key, classElement.descriptor)
+				return classElement.finisher?.(Class) ?? Class
+			},
+		}
+	}
+
+	// If used as a class decorator.
+	if (typeof protoOrClassElement === 'function') {
+		const Class = protoOrClassElement
+
+		return class extends Class {
+			constructor() {
+				super()
+				reactify(this, Class)
+			}
+		}
+	}
+
+	return _reactive(protoOrClassElement, name!, descriptor)
+}
+
+const classToKeys = new WeakMap<AnyClass, string[]>()
+
+function _reactive(prototype: any, name: string, descriptor?: PropertyDescriptor) {
+	let keys = classToKeys.get(prototype.constructor)
+	if (!keys) classToKeys.set(prototype.constructor, (keys = []))
+	keys.push(name)
+
 	const vName = 'v_' + name
 
-	// property decorators are not passed a descriptor (unlike decorators on accessors or methods)
+	// In TypeScript property decorators are not passed a descriptor (unlike decorators on accessors or methods)
 	let calledAsPropertyDecorator = false
 
 	if (!descriptor) {
@@ -121,7 +157,7 @@ export function reactive<T>(prototype: any, name: string, descriptor?: PropertyD
 
 	let originalGet: (() => any) | undefined
 	let originalSet: ((v: any) => void) | undefined
-	let initialValue: T
+	let initialValue: unknown
 	let writable: boolean | undefined
 
 	// TODO if there is an inherited accessor, we need to ensure we still call
@@ -169,9 +205,10 @@ export function reactive<T>(prototype: any, name: string, descriptor?: PropertyD
 		...descriptor,
 		// XXX should we throw an error if descriptor.configurable is false?
 		configurable: true,
-		get(): T {
+		get(): unknown {
 			// initialValue could be undefined
-			const v = __getReactiveVar<T>(this, vName, initialValue)
+			// XXX this causes initialValue to be held onto after subsequent values and not collected
+			const v = __getReactiveVar(this, vName, initialValue)
 
 			if (originalGet) {
 				// track reactivity, but get the value from the original getter
@@ -181,8 +218,8 @@ export function reactive<T>(prototype: any, name: string, descriptor?: PropertyD
 
 			return v()
 		},
-		set(newValue: T) {
-			const v = __getReactiveVar<T>(this, vName, initialValue)
+		set(newValue: unknown) {
+			const v = __getReactiveVar(this, vName, initialValue)
 
 			if (originalSet) originalSet.call(this, newValue)
 
@@ -198,6 +235,38 @@ export function reactive<T>(prototype: any, name: string, descriptor?: PropertyD
 	else return descriptor
 	// Weird, huh?
 	// This will change with updates to the ES decorators proposal, https://github.com/tc39/proposal-decorators
+}
+
+type AnyClass = new (...args: any[]) => object
+
+export function reactify<T>(obj: T, props: string[]): typeof obj
+export function reactify<C extends AnyClass>(obj: InstanceType<C>, ctor: C): typeof obj
+export function reactify(obj: any, propsOrCtor: any) {
+	if (typeof propsOrCtor === 'function') {
+		const ctor = propsOrCtor
+		const o = obj as Record<string, unknown>
+		const keys = classToKeys.get(ctor) || []
+
+		for (const key of keys) {
+			if (obj.hasOwnProperty(key)) {
+				const initialValue = o[key]
+				delete o[key]
+				o[key] = initialValue
+			}
+		}
+
+		return obj
+	}
+
+	const keys = propsOrCtor
+
+	for (const key of keys) {
+		const initialValue = obj[key]
+		_reactive(obj, key)
+		obj[key] = initialValue
+	}
+
+	return obj
 }
 
 export const version = '0.1.0'
