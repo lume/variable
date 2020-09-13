@@ -120,8 +120,8 @@ export function reactive(protoOrClassElement: any, name?: string, descriptor?: P
 				...classElement,
 				finisher(Class: AnyClass) {
 					return class extends Class {
-						constructor() {
-							super()
+						constructor(...args: any[]) {
+							super(...args)
 							reactify(this, Class)
 						}
 					}
