@@ -306,4 +306,4 @@ export function reactify(obj: any, propsOrCtor: any) {
 	return obj
 }
 
-export const version = '0.1.1'
+export const version = '0.1.2'
