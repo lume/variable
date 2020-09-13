@@ -113,6 +113,28 @@ describe('@lume/variable', () => {
 			testButterflyProps(b)
 		})
 
+		it('does not prevent superclass constructor from receiving subclass constructor args', () => {
+			let called = false
+
+			@reactive
+			class Insect {
+				constructor(arg: number) {
+					expect(arg).toBe(8)
+					called = true
+				}
+			}
+
+			class Butterfly extends Insect {
+				constructor(arg: number) {
+					super(arg * 2)
+				}
+			}
+
+			new Butterfly(4)
+
+			expect(called).toBe(true)
+		})
+
 		it('makes class properties reactive, using only property/accessor decorators', () => {
 			class Butterfly {
 				@reactive colors = 3

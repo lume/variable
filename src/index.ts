@@ -118,14 +118,7 @@ export function reactive(protoOrClassElement: any, name?: string, descriptor?: P
 		if (classElement.kind === 'class') {
 			return {
 				...classElement,
-				finisher(Class: AnyClass) {
-					return class extends Class {
-						constructor(...args: any[]) {
-							super(...args)
-							reactify(this, Class)
-						}
-					}
-				},
+				finisher: reactiveClassFinisher,
 			}
 		}
 
@@ -146,18 +139,21 @@ export function reactive(protoOrClassElement: any, name?: string, descriptor?: P
 	// If used as a class decorator.
 	if (arguments.length === 1 && typeof protoOrClassElement === 'function') {
 		const Class = protoOrClassElement
-
-		return class extends Class {
-			constructor() {
-				super()
-				reactify(this, Class)
-			}
-		}
+		return reactiveClassFinisher(Class)
 	}
 
 	// If used as a property or accessor decorator (this isn't intended for
 	// methods).
 	return _reactive(protoOrClassElement, name!, descriptor)
+}
+
+function reactiveClassFinisher(Class: AnyClass) {
+	return class extends Class {
+		constructor(...args: any[]) {
+			super(...args)
+			reactify(this, Class)
+		}
+	}
 }
 
 const classToKeys = new WeakMap<AnyClass, string[]>()
