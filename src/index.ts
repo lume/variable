@@ -266,6 +266,9 @@ function _reactive(prototype: any, name: string, descriptor?: PropertyDescriptor
 	else return descriptor
 	// Weird, huh?
 	// This will change with updates to the ES decorators proposal, https://github.com/tc39/proposal-decorators
+
+	// Explicit return to satisfy TS noImplicitReturn.
+	return
 }
 
 type AnyClass = new (...args: any[]) => object
