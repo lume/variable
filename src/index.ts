@@ -1,19 +1,4 @@
-import {createSignal, createEffect, createRoot} from 'solid-js'
-
-export * from 'solid-js'
-
-// These lines should live in @lume/element, but doing that causes Solid to
-// exist more than once in node_modules, which causes issues. So because we know
-// @lume/element depends on @lume/variable, we stuck these here to avoid the
-// duplicate-module issues.
-export * from 'solid-js/dom'
-import html from 'solid-js/html'
-export {html}
-
-export interface ReactiveVariable<T> {
-	(value?: undefined): T
-	(value: T): void
-}
+import {createSignal, createEffect, createRoot, sample} from 'solid-js'
 
 /** Represents a reactive variable. The value is set or gotten depending on passing an arg or no arg. */
 export interface Variable<T = any> {
@@ -96,9 +81,9 @@ export function autorun(f: Computation): StopFunction {
 	return stop!
 }
 
-function __getReactiveVar<T>(instance: Object, vName: string, initialValue: T = undefined!): ReactiveVariable<T> {
+function __getReactiveVar<T>(instance: Object, vName: string, initialValue: T = undefined!): Variable<T> {
 	// NOTE alternatively, we could use a WeakMap instead of exposing the variable on the instance.
-	let v: ReactiveVariable<T> = (instance as any)[vName]
+	let v: Variable<T> = (instance as any)[vName]
 
 	if (v) return v
 
@@ -304,5 +289,7 @@ export function reactify(obj: any, propsOrCtor: any) {
 
 	return obj
 }
+
+export const untrack = sample
 
 export const version = '0.1.3'
