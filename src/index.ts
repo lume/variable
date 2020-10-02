@@ -292,4 +292,4 @@ export function reactify(obj: any, propsOrCtor: any) {
 
 export const untrack = sample
 
-export const version = '0.1.3'
+export const version = '0.2.0'
