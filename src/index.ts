@@ -1,4 +1,9 @@
-import {createSignal, createEffect, createRoot, sample} from 'solid-js'
+import * as SOLID from 'solid-js'
+import {getGlobal} from './getGlobal'
+
+const global = getGlobal() as any
+const Solid: typeof SOLID = global.SOLID ?? (global.SOLID = SOLID)
+const {createSignal, createEffect, createRoot, sample} = Solid
 
 /** Represents a reactive variable. The value is set or gotten depending on passing an arg or no arg. */
 export interface Variable<T = any> {
