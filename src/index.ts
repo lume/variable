@@ -317,7 +317,6 @@ function unshadowReactiveAccessors(obj: Obj, props: string[]) {
 	for (const prop of props) {
 		if (obj.hasOwnProperty(prop)) {
 			const initialValue = obj[prop]
-			if (prop == 'bop') console.log('unshadowReactiveAccessor bop initialValue:', initialValue)
 			delete obj[prop]
 			obj[prop] = initialValue
 		}
@@ -327,13 +326,9 @@ function unshadowReactiveAccessors(obj: Obj, props: string[]) {
 // Defines a reactive accessor on obj.
 function createReactiveAccessors(obj: ObjWithReactifiedProps, props: string[]) {
 	for (const prop of props) {
-		if (obj.__reactifiedProps__?.has(prop)) {
-			if (prop == 'bop') console.log('bop already reactified, skipping')
-			continue
-		}
+		if (obj.__reactifiedProps__?.has(prop)) continue
 
 		const initialValue = obj[prop]
-		if (prop == 'bop') console.log('createReactiveAccessors bop initialValue:', initialValue)
 		_reactive(obj, prop)
 		obj[prop] = initialValue
 	}
