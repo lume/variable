@@ -114,14 +114,9 @@ describe('@lume/variable', () => {
 		})
 
 		it('does not prevent superclass constructor from receiving subclass constructor args', () => {
-			let called = false
-
 			@reactive
 			class Insect {
-				constructor(arg: number) {
-					expect(arg).toBe(8)
-					called = true
-				}
+				constructor(public result: number) {}
 			}
 
 			class Butterfly extends Insect {
@@ -130,9 +125,9 @@ describe('@lume/variable', () => {
 				}
 			}
 
-			new Butterfly(4)
+			const b = new Butterfly(4)
 
-			expect(called).toBe(true)
+			expect(b.result).toBe(8)
 		})
 
 		it('makes class properties reactive, using only property/accessor decorators', () => {
@@ -159,7 +154,7 @@ describe('@lume/variable', () => {
 			testButterflyProps(b)
 		})
 
-		it('makes class properties reactive, not using any decorators', () => {
+		it('makes class properties reactive, not using any decorators, specified in the constructor', () => {
 			class Butterfly {
 				colors = 3
 
@@ -181,10 +176,34 @@ describe('@lume/variable', () => {
 
 			testButterflyProps(b)
 		})
+
+		it('makes class properties reactive, not using any decorators, specified via static prop', () => {
+			class Butterfly {
+				static reactiveProperties = ['colors', 'wingSize']
+
+				colors = 3
+
+				_wingSize = 2
+
+				get wingSize() {
+					return this._wingSize
+				}
+				set wingSize(s: number) {
+					this._wingSize = s
+				}
+
+				constructor() {
+					reactify(this, Butterfly)
+				}
+			}
+
+			const b = new Butterfly()
+			testButterflyProps(b)
+		})
 	})
 })
 
-function testButterflyProps(b: any) {
+function testButterflyProps(b: {colors: number; wingSize: number}) {
 	let count = 0
 
 	autorun(() => {
@@ -195,15 +214,15 @@ function testButterflyProps(b: any) {
 
 	expect(b.colors).toBe(3)
 	expect(b.wingSize).toBe(2)
-	expect(count).toBe(1)
+	expect(count).toBe(1, 'Should be reactive')
 
 	b.colors++
 
 	expect(b.colors).toBe(4)
-	expect(count).toBe(2)
+	expect(count).toBe(2, 'Should be reactive')
 
 	b.wingSize++
 
 	expect(b.wingSize).toBe(3)
-	expect(count).toBe(3)
+	expect(count).toBe(3, 'Should be reactive')
 }
