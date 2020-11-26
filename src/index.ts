@@ -94,8 +94,7 @@ function __getReactiveVar<T>(instance: Obj<Variable<T>>, vName: string, initialV
 
 	if (v) return v
 
-	// defineProperty to make it non-enumerable, non-writable, non-configurable
-	Object.defineProperty(instance, vName, {value: v = variable<T>(initialValue)})
+	instance[vName] = v = variable<T>(initialValue)
 
 	return v
 }
@@ -178,7 +177,6 @@ function _reactive(prototype: ObjWithReactifiedProps, propName: string, descript
 	let originalGet: (() => any) | undefined
 	let originalSet: ((v: any) => void) | undefined
 	let initialValue: unknown
-	let writable: boolean | undefined
 
 	// TODO if there is an inherited accessor, we need to ensure we still call
 	// it so that we're extending instead of overriding. Otherwise placing
@@ -188,10 +186,10 @@ function _reactive(prototype: ObjWithReactifiedProps, propName: string, descript
 	// prototype, but we aren't checking for any accessor that may be inherited.
 
 	if (descriptor) {
-		if (descriptor.get || descriptor.set) {
-			originalGet = descriptor.get
-			originalSet = descriptor.set
+		originalGet = descriptor.get
+		originalSet = descriptor.set
 
+		if (originalGet || originalSet) {
 			// reactivity requires both
 			if (!originalGet || !originalSet) {
 				console.warn(
@@ -206,11 +204,10 @@ function _reactive(prototype: ObjWithReactifiedProps, propName: string, descript
 			delete descriptor.set
 		} else {
 			initialValue = descriptor.value
-			writable = descriptor.writable
 
 			// if it isn't writable, we don't need to make a reactive variable because
 			// the value won't change
-			if (!writable) {
+			if (!descriptor.writable) {
 				console.warn(
 					'The `@reactive` decorator was used on a property named ' +
 						propName +
@@ -226,10 +223,11 @@ function _reactive(prototype: ObjWithReactifiedProps, propName: string, descript
 
 	descriptor = {
 		...descriptor,
-		configurable: true,
 		get(this: any): unknown {
-			// initialValue could be undefined
-			// XXX this causes initialValue to be held onto after subsequent values and not collected
+			// XXX this causes initialValue to be held onto even if the original
+			// prototype value has changed. In pratice the original prototype
+			// values usually never change, and these days people don't normally
+			// use prototype values to begin with.
 			const v = __getReactiveVar(this, vName, initialValue)
 
 			if (originalGet) {
@@ -241,7 +239,7 @@ function _reactive(prototype: ObjWithReactifiedProps, propName: string, descript
 			return v()
 		},
 		set(this: any, newValue: unknown) {
-			const v = __getReactiveVar(this, vName, initialValue)
+			const v = __getReactiveVar(this, vName)
 
 			if (originalSet) originalSet.call(this, newValue)
 

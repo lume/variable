@@ -92,27 +92,6 @@ describe('@lume/variable', () => {
 			expect(reactive).toBeInstanceOf(Function)
 		})
 
-		it('makes class properties reactive, using class and property/accessor decorators', () => {
-			@reactive
-			class Butterfly {
-				@reactive colors = 3
-
-				_wingSize = 2
-
-				@reactive
-				get wingSize() {
-					return this._wingSize
-				}
-				set wingSize(s: number) {
-					this._wingSize = s
-				}
-			}
-
-			const b = new Butterfly()
-
-			testButterflyProps(b)
-		})
-
 		it('does not prevent superclass constructor from receiving subclass constructor args', () => {
 			@reactive
 			class Insect {
@@ -130,10 +109,29 @@ describe('@lume/variable', () => {
 			expect(b.result).toBe(8)
 		})
 
+		it('makes class properties reactive, using class and property/accessor decorators', () => {
+			@reactive
+			class Butterfly {
+				@reactive colors = 3
+				_wingSize = 2
+
+				@reactive
+				get wingSize() {
+					return this._wingSize
+				}
+				set wingSize(s: number) {
+					this._wingSize = s
+				}
+			}
+
+			const b = new Butterfly()
+
+			testButterflyProps(b)
+		})
+
 		it('makes class properties reactive, using only property/accessor decorators', () => {
 			class Butterfly {
 				@reactive colors = 3
-
 				_wingSize = 2
 
 				@reactive
@@ -157,7 +155,6 @@ describe('@lume/variable', () => {
 		it('makes class properties reactive, not using any decorators, specified in the constructor', () => {
 			class Butterfly {
 				colors = 3
-
 				_wingSize = 2
 
 				get wingSize() {
@@ -177,12 +174,81 @@ describe('@lume/variable', () => {
 			testButterflyProps(b)
 		})
 
+		it('makes class properties reactive, with properties defined in the constructor', () => {
+			class Butterfly {
+				colors: number
+				_wingSize: number
+
+				get wingSize() {
+					return this._wingSize
+				}
+				set wingSize(s: number) {
+					this._wingSize = s
+				}
+
+				constructor() {
+					this.colors = 3
+					this._wingSize = 2
+
+					reactify(this, ['colors', 'wingSize'])
+				}
+			}
+
+			const b = new Butterfly()
+
+			testButterflyProps(b)
+		})
+
+		it('makes class properties reactive, using only class decorator, specified via static prop', () => {
+			@reactive
+			class Butterfly {
+				static reactiveProperties = ['colors', 'wingSize']
+
+				colors = 3
+				_wingSize = 2
+
+				get wingSize() {
+					return this._wingSize
+				}
+				set wingSize(s: number) {
+					this._wingSize = s
+				}
+			}
+
+			const b = new Butterfly()
+			testButterflyProps(b)
+		})
+
+		it('makes class properties reactive, using only class decorator, specified via static prop, properties defined in the constructor', () => {
+			@reactive
+			class Butterfly {
+				static reactiveProperties = ['colors', 'wingSize']
+
+				colors: number
+				_wingSize: number
+
+				get wingSize() {
+					return this._wingSize
+				}
+				set wingSize(s: number) {
+					this._wingSize = s
+				}
+
+				constructor() {
+					this.colors = 3
+					this._wingSize = 2
+				}
+			}
+
+			const b = new Butterfly()
+			testButterflyProps(b)
+		})
+
 		it('makes class properties reactive, not using any decorators, specified via static prop', () => {
 			class Butterfly {
 				static reactiveProperties = ['colors', 'wingSize']
 
 				colors = 3
-
 				_wingSize = 2
 
 				get wingSize() {
@@ -200,6 +266,260 @@ describe('@lume/variable', () => {
 			const b = new Butterfly()
 			testButterflyProps(b)
 		})
+
+		it('makes class properties reactive, not using any decorators, specified via static prop, properties defined in the constructor', () => {
+			class Butterfly {
+				static reactiveProperties = ['colors', 'wingSize']
+
+				colors: number
+				_wingSize: number
+
+				get wingSize() {
+					return this._wingSize
+				}
+				set wingSize(s: number) {
+					this._wingSize = s
+				}
+
+				constructor() {
+					this.colors = 3
+					this._wingSize = 2
+
+					reactify(this, Butterfly)
+				}
+			}
+
+			const b = new Butterfly()
+			testButterflyProps(b)
+		})
+
+		it('can be used on a function-style class, with properties in the constructor', () => {
+			function Butterfly() {
+				// @ts-ignore
+				this.colors = 3
+				// @ts-ignore
+				this._wingSize = 2
+
+				// @ts-ignore
+				reactify(this, Butterfly)
+			}
+
+			Butterfly.reactiveProperties = ['colors', 'wingSize']
+
+			Butterfly.prototype = {
+				get wingSize() {
+					return this._wingSize
+				},
+				set wingSize(s: number) {
+					this._wingSize = s
+				},
+			}
+
+			// @ts-ignore
+			const b = new Butterfly()
+			testButterflyProps(b)
+		})
+
+		it('can be used on a function-style class, with properties on the prototype, reactify with static reactiveProperties in constructor', () => {
+			function Butterfly() {
+				// @ts-ignore
+				reactify(this, Butterfly)
+			}
+
+			Butterfly.reactiveProperties = ['colors', 'wingSize']
+
+			Butterfly.prototype = {
+				colors: 3,
+				_wingSize: 2,
+
+				get wingSize() {
+					return this._wingSize
+				},
+				set wingSize(s: number) {
+					this._wingSize = s
+				},
+			}
+
+			// @ts-ignore
+			const b = new Butterfly()
+			testButterflyProps(b)
+		})
+
+		it('can be used on a function-style class, with properties on the prototype, reactify with static reactiveProperties on the prototype', () => {
+			function Butterfly() {}
+
+			Butterfly.reactiveProperties = ['colors', 'wingSize']
+
+			Butterfly.prototype = {
+				colors: 3,
+				_wingSize: 2,
+
+				get wingSize() {
+					return this._wingSize
+				},
+				set wingSize(s: number) {
+					this._wingSize = s
+				},
+			}
+
+			// @ts-ignore
+			reactify(Butterfly.prototype, Butterfly)
+
+			// @ts-ignore
+			const b = new Butterfly()
+			testButterflyProps(b)
+		})
+
+		it('can be used on a function-style class, with properties on the prototype, reactify with specific props in constructor', () => {
+			function Butterfly() {
+				// @ts-ignore
+				reactify(this, ['colors', 'wingSize'])
+			}
+
+			Butterfly.prototype = {
+				colors: 3,
+				_wingSize: 2,
+
+				get wingSize() {
+					return this._wingSize
+				},
+				set wingSize(s: number) {
+					this._wingSize = s
+				},
+			}
+
+			// @ts-ignore
+			const b = new Butterfly()
+			testButterflyProps(b)
+		})
+
+		it('can be used on a function-style class, with properties on the prototype, reactify with specific props on the prototype', () => {
+			function Butterfly() {}
+
+			Butterfly.prototype = {
+				colors: 3,
+				_wingSize: 2,
+
+				get wingSize() {
+					return this._wingSize
+				},
+				set wingSize(s: number) {
+					this._wingSize = s
+				},
+			}
+
+			reactify(Butterfly.prototype, ['colors', 'wingSize'])
+
+			// @ts-ignore
+			const b = new Butterfly()
+			testButterflyProps(b)
+		})
+
+		it('can be used on a function-style class, with properties in the constructor, reactive applied to constructor', () => {
+			let Butterfly = function Butterfly() {
+				// @ts-ignore
+				this.colors = 3
+				// @ts-ignore
+				this._wingSize = 2
+			}
+
+			// @ts-ignore
+			Butterfly.reactiveProperties = ['colors', 'wingSize']
+
+			Butterfly.prototype = {
+				get wingSize() {
+					return this._wingSize
+				},
+				set wingSize(s: number) {
+					this._wingSize = s
+				},
+			}
+
+			Butterfly = reactive(Butterfly)
+
+			// @ts-ignore
+			const b = new Butterfly()
+			testButterflyProps(b)
+		})
+
+		it('can be used on a function-style class, with properties on the prototype, reactive applied to constructor', () => {
+			let Butterfly = function Butterfly() {}
+
+			// @ts-ignore
+			Butterfly.reactiveProperties = ['colors', 'wingSize']
+
+			Butterfly.prototype = {
+				colors: 3,
+				_wingSize: 2,
+
+				get wingSize() {
+					return this._wingSize
+				},
+				set wingSize(s: number) {
+					this._wingSize = s
+				},
+			}
+
+			Butterfly = reactive(Butterfly)
+
+			// @ts-ignore
+			const b = new Butterfly()
+			testButterflyProps(b)
+		})
+
+		it('can be used on a function-style class, with properties in the constructor, reactive applied to specific prototype properties', () => {
+			function Butterfly() {
+				// @ts-ignore
+				this.colors = 3
+				// @ts-ignore
+				this._wingSize = 2
+			}
+
+			// @ts-ignore
+			Butterfly.reactiveProperties = ['colors', 'wingSize']
+
+			Butterfly.prototype = {
+				get wingSize() {
+					return this._wingSize
+				},
+				set wingSize(s: number) {
+					this._wingSize = s
+				},
+			}
+
+			reactive(Butterfly.prototype, 'colors')
+			reactive(Butterfly.prototype, 'wingSize')
+
+			// @ts-ignore
+			const b = new Butterfly()
+			testButterflyProps(b)
+		})
+
+		it('can be used on a function-style class, with properties on the prototype, reactive applied to specific prototype properties', () => {
+			let Butterfly = function Butterfly() {}
+
+			// @ts-ignore
+			Butterfly.reactiveProperties = ['colors', 'wingSize']
+
+			Butterfly.prototype = {
+				colors: 3,
+				_wingSize: 2,
+
+				get wingSize() {
+					return this._wingSize
+				},
+				set wingSize(s: number) {
+					this._wingSize = s
+				},
+			}
+
+			reactive(Butterfly.prototype, 'colors')
+			reactive(Butterfly.prototype, 'wingSize')
+
+			// @ts-ignore
+			const b = new Butterfly()
+			testButterflyProps(b)
+		})
 	})
 })
 
@@ -212,17 +532,17 @@ function testButterflyProps(b: {colors: number; wingSize: number}) {
 		count++
 	})
 
-	expect(b.colors).toBe(3)
-	expect(b.wingSize).toBe(2)
+	expect(b.colors).toBe(3, 'initial colors value')
+	expect(b.wingSize).toBe(2, 'initial wingSize value')
 	expect(count).toBe(1, 'Should be reactive')
 
 	b.colors++
 
-	expect(b.colors).toBe(4)
+	expect(b.colors).toBe(4, 'incremented colors value')
 	expect(count).toBe(2, 'Should be reactive')
 
 	b.wingSize++
 
-	expect(b.wingSize).toBe(3)
+	expect(b.wingSize).toBe(3, 'incremented wingSize value')
 	expect(count).toBe(3, 'Should be reactive')
 }
