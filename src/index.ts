@@ -107,20 +107,14 @@ export function reactive(protoOrClassElement: any, name?: string, descriptor?: P
 		const classElement = protoOrClassElement
 
 		// If used as a class decorator.
-		if (classElement.kind === 'class') {
-			return {
-				...classElement,
-				finisher: reactiveClassFinisher,
-			}
-		}
+		if (classElement.kind === 'class') return {...classElement, finisher: reactiveClassFinisher}
 
-		// If used as a property or accessor decorator (this isn't intended for
+		// If used as a property or accessor decorator (@reactive isn't intended for
 		// methods).
 		return {
 			...classElement,
-			// placement: 'prototype',
 			finisher(Class: AnyClass) {
-				_reactive(Class.prototype, classElement.key /*, classElement.descriptor*/)
+				_reactive(Class.prototype, classElement.key)
 				return classElement.finisher?.(Class) ?? Class
 			},
 		}
@@ -189,6 +183,9 @@ function _reactive(prototype: ObjWithReactifiedProps, propName: string, descript
 	// TODO if there is an inherited accessor, we need to ensure we still call
 	// it so that we're extending instead of overriding. Otherwise placing
 	// @reactive on a property will break that functionality in those cases.
+	//
+	// Right now, originalGet will only be called if it is on the current
+	// prototype, but we aren't checking for any accessor that may be inherited.
 
 	if (descriptor) {
 		if (descriptor.get || descriptor.set) {
@@ -229,7 +226,6 @@ function _reactive(prototype: ObjWithReactifiedProps, propName: string, descript
 
 	descriptor = {
 		...descriptor,
-		// XXX should we throw an error if descriptor.configurable is false?
 		configurable: true,
 		get(this: any): unknown {
 			// initialValue could be undefined
@@ -298,9 +294,7 @@ export function reactify(obj: Obj, propsOrClass: string[] | AnyClassWithReactive
 		if (props) unshadowReactiveAccessors(obj, props)
 
 		props = Class.reactiveProperties
-		if (Array.isArray(props)) {
-			createReactiveAccessors(obj, props)
-		}
+		if (Array.isArray(props)) createReactiveAccessors(obj, props)
 	} else {
 		const props = propsOrClass
 		createReactiveAccessors(obj, props)
