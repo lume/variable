@@ -86,19 +86,6 @@ export function autorun(f: Computation): StopFunction {
 	return stop!
 }
 
-function __getReactiveVar<T>(instance: Obj<Variable<T>>, vName: string, initialValue: T = undefined!): Variable<T> {
-	// NOTE alternatively, we could use a WeakMap instead of exposing the
-	// variable on the instance. We could also use Symbols keys for
-	// semi-privacy.
-	let v: Variable<T> = instance[vName]
-
-	if (v) return v
-
-	instance[vName] = v = variable<T>(initialValue)
-
-	return v
-}
-
 export function reactive(protoOrClassElement: any, name?: string, descriptor?: PropertyDescriptor): any {
 	// If used as a newer Babel decorator
 	const isDecoratorV2 = arguments.length === 1 && 'kind' in protoOrClassElement
@@ -223,36 +210,45 @@ function _reactive(prototype: ObjWithReactifiedProps, propName: string, descript
 
 	descriptor = {
 		...descriptor,
-		get(this: any): unknown {
-			// XXX this causes initialValue to be held onto even if the original
-			// prototype value has changed. In pratice the original prototype
-			// values usually never change, and these days people don't normally
-			// use prototype values to begin with.
-			const v = __getReactiveVar(this, vName, initialValue)
+		get: originalGet
+			? function(this: any): unknown {
+					// track reactivity, but get the value from the original getter
 
-			if (originalGet) {
-				// track reactivity, but get the value from the original getter
-				v()
-				return originalGet.call(this)
-			}
+					// XXX this causes initialValue to be held onto even if the original
+					// prototype value has changed. In pratice the original prototype
+					// values usually never change, and these days people don't normally
+					// use prototype values to begin with.
+					const v = __getReactiveVar(this, vName, initialValue)
+					v()
 
-			return v()
-		},
-		set(this: any, newValue: unknown) {
-			const v = __getReactiveVar(this, vName)
+					return originalGet!.call(this)
+			  }
+			: function(this: any): unknown {
+					const v = __getReactiveVar(this, vName, initialValue)
+					return v()
+			  },
+		set: originalSet
+			? function(this: any, newValue: unknown) {
+					originalSet!.call(this, newValue)
 
-			if (originalSet) originalSet.call(this, newValue)
+					const v = __getReactiveVar(this, vName)
+					v(newValue)
 
-			v(newValue)
+					// XXX __propsSetAtLeastOnce__ is a Set that tracks which reactive
+					// properties have been set at least once. @lume/element uses this
+					// to detect if a reactive prop has been set, and if so will not
+					// overwrite the value with any value from custom element
+					// pre-upgrade.
+					if (!this.__propsSetAtLeastOnce__) this.__propsSetAtLeastOnce__ = new Set<string>()
+					this.__propsSetAtLeastOnce__.add(propName)
+			  }
+			: function(this: any, newValue: unknown) {
+					const v = __getReactiveVar(this, vName)
+					v(newValue)
 
-			// XXX __propsSetAtLeastOnce__ is a Set that tracks which reactive
-			// properties have been set at least once. @lume/element uses this
-			// to detect if a reactive prop has been set, and if so will not
-			// overwrite the value with any value from custom element
-			// pre-upgrade.
-			if (!this.__propsSetAtLeastOnce__) this.__propsSetAtLeastOnce__ = new Set<string>()
-			this.__propsSetAtLeastOnce__.add(propName)
-		},
+					if (!this.__propsSetAtLeastOnce__) this.__propsSetAtLeastOnce__ = new Set<string>()
+					this.__propsSetAtLeastOnce__.add(propName)
+			  },
 	}
 
 	if (!prototype.__reactifiedProps__) prototype.__reactifiedProps__ = new Set()
@@ -269,6 +265,19 @@ function _reactive(prototype: ObjWithReactifiedProps, propName: string, descript
 
 	// Explicit return to satisfy TS noImplicitReturn.
 	return
+}
+
+function __getReactiveVar<T>(instance: Obj<Variable<T>>, vName: string, initialValue: T = undefined!): Variable<T> {
+	// NOTE alternatively, we could use a WeakMap instead of exposing the
+	// variable on the instance. We could also use Symbols keys for
+	// semi-privacy.
+	let v: Variable<T> = instance[vName]
+
+	if (v) return v
+
+	instance[vName] = v = variable<T>(initialValue)
+
+	return v
 }
 
 type AnyClass = new (...args: any[]) => object
