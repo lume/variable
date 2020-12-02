@@ -35,10 +35,10 @@
 	"dependencies": {
 		"dom-expressions": "^0.19.10",
 		"lit-dom-expressions": "^0.19.10",
-		"solid-js": "0.18.0"
+		"solid-js": "0.22.8"
 	},
 	"devDependencies": {
-		"@lume/cli": "^0.2.0",
+		"@lume/cli": "^0.3.0",
 		"prettier": "^1.19.1"
 	},
 	"repository": {

@@ -3,7 +3,7 @@ import {getGlobal} from './getGlobal'
 
 const global = getGlobal() as any
 const Solid: typeof SOLID = global.SOLID ?? (global.SOLID = SOLID)
-const {createSignal, createEffect, createRoot, sample} = Solid
+const {createSignal, createEffect, createRoot, untrack: _untrack} = Solid
 
 /** Represents a reactive variable. The value is set or gotten depending on passing an arg or no arg. */
 export interface Variable<T = any> {
@@ -338,6 +338,24 @@ function createReactiveAccessors(obj: ObjWithReactifiedProps, props: string[]) {
 type Obj<T = unknown> = Record<PropertyKey, T> & {constructor: AnyClass}
 type ObjWithReactifiedProps<T = unknown> = Obj<T> & {__reactifiedProps__?: Set<string>}
 
-export const untrack = sample
+/**
+ * When untrack() is used inside an autorun(), dependencies for code inside the
+ * untrack() block will not be tracked although the code still runs when the
+ * autorun runs. For example:
+ *
+ * ```js
+ * autorun(() => {
+ *   // This autorun will re-run whenever someVar changes...
+ *   console.log(someVar())
+ *
+ *   untrack(() => {
+ *     // ...but not when otherVar changes, although this logic still fires any
+ *     // time the autorun re-runs.
+ *     console.log(otherVar())
+ *   })
+ * })
+ * ```
+ */
+export const untrack = _untrack
 
 export const version = '0.2.3'
