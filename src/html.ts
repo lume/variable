@@ -4,7 +4,7 @@
 // to avoid the duplicate-module issues.
 import _html from 'solid-js/html'
 
-import {getGlobal} from './getGlobal'
+import {getGlobal} from './getGlobal.js'
 
 const global = getGlobal() as any
 

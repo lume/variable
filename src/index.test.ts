@@ -1,4 +1,4 @@
-import {variable, autorun, reactive, reactify} from './index'
+import {variable, autorun, reactive, reactify} from './index.js'
 
 describe('@lume/variable', () => {
 	describe('variable()', () => {

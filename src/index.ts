@@ -1,5 +1,5 @@
 import * as SOLID from 'solid-js'
-import {getGlobal} from './getGlobal'
+import {getGlobal} from './getGlobal.js'
 
 const global = getGlobal() as any
 const Solid: typeof SOLID = global.SOLID ?? (global.SOLID = SOLID)

@@ -5,7 +5,7 @@
 
 import * as _dom from 'solid-js/dom'
 
-import {getGlobal} from './getGlobal'
+import {getGlobal} from './getGlobal.js'
 
 const global = getGlobal() as any
 
