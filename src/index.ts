@@ -86,7 +86,7 @@ export function autorun(f: Computation): StopFunction {
 	return stop!
 }
 
-export function reactive(protoOrClassElement: any, name?: string, descriptor?: PropertyDescriptor): any {
+export function reactive(protoOrClassElement: any, propName?: string, _descriptor?: PropertyDescriptor): any {
 	// If used as a newer Babel decorator
 	const isDecoratorV2 = arguments.length === 1 && 'kind' in protoOrClassElement
 	if (isDecoratorV2) {
@@ -99,8 +99,9 @@ export function reactive(protoOrClassElement: any, name?: string, descriptor?: P
 		// methods).
 		return {
 			...classElement,
-			finisher(Class: AnyClass) {
-				_reactive(Class.prototype, classElement.key)
+			finisher(Class: AnyClassWithReactiveProps) {
+				_trackReactiveProperty(Class, classElement.key)
+
 				return classElement.finisher?.(Class) ?? Class
 			},
 		}
@@ -116,13 +117,21 @@ export function reactive(protoOrClassElement: any, name?: string, descriptor?: P
 
 	// If used as a property or accessor decorator (this isn't intended for
 	// methods).
-	return _reactive(protoOrClassElement, name!, descriptor)
+	const Class = protoOrClassElement.constructor
+	_trackReactiveProperty(Class, propName!)
 }
 
-function reactiveClassFinisher(Class: AnyClass) {
-	return class extends Class {
+export function _trackReactiveProperty(Class: AnyClassWithReactiveProps, propName: string) {
+	if (!Class.reactiveProperties || !Class.hasOwnProperty('reactiveProperties')) Class.reactiveProperties = []
+	if (!Class.reactiveProperties.includes(propName)) Class.reactiveProperties.push(propName)
+}
+
+function reactiveClassFinisher(Class: AnyClassWithReactiveProps) {
+	if (Class.hasOwnProperty('__isReactive__')) return Class
+
+	return class ReactiveDecoratorFinisher extends Class {
 		// This is a flag that other decorators can check, f.e. lume/elements @element decorator.
-		static __isReactive__ = true
+		static __isReactive__: true = true
 
 		constructor(...args: any[]) {
 			super(...args)
@@ -131,35 +140,13 @@ function reactiveClassFinisher(Class: AnyClass) {
 	}
 }
 
-const classReactiveProps = new WeakMap<AnyClass, string[]>()
-
-function _reactive(prototype: ObjWithReactifiedProps, propName: string, descriptor?: PropertyDescriptor) {
-	let keys = classReactiveProps.get(prototype.constructor)
-	if (!keys) classReactiveProps.set(prototype.constructor, (keys = []))
-	keys.push(propName)
-
+function _reactive(obj: ObjWithReactifiedProps, propName: string): void {
 	const vName = 'v_' + propName
 
 	// TODO If prototype already has vName, skip making an accessor.
 	// if (prototype[vName] !== undefined) return
 
-	let calledAsPropertyDecorator = false
-
-	// In TypeScript property decorators are not passed a descriptor (unlike decorators on accessors or methods)
-	// const isTypeScriptPropertyDecorator = !descriptor
-	if (
-		// TypeScript legacy decorator case
-		!descriptor ||
-		// Babel legacy decorator case
-		'initializer' in descriptor
-	) {
-		calledAsPropertyDecorator = true
-
-		// TypeScript legacy decorator case
-		if (!descriptor) descriptor = Object.getOwnPropertyDescriptor(prototype, propName)
-
-		// In the Babel legacy decorator case, descriptor always exists.
-	}
+	let descriptor = Object.getOwnPropertyDescriptor(obj, propName)
 
 	let originalGet: (() => any) | undefined
 	let originalSet: ((v: any) => void) | undefined
@@ -209,6 +196,8 @@ function _reactive(prototype: ObjWithReactifiedProps, propName: string, descript
 	}
 
 	descriptor = {
+		configurable: true,
+		enumerable: true,
 		...descriptor,
 		get: originalGet
 			? function(this: any): unknown {
@@ -234,7 +223,7 @@ function _reactive(prototype: ObjWithReactifiedProps, propName: string, descript
 					const v = __getReactiveVar(this, vName)
 					v(newValue)
 
-					// XXX __propsSetAtLeastOnce__ is a Set that tracks which reactive
+					// __propsSetAtLeastOnce__ is a Set that tracks which reactive
 					// properties have been set at least once. @lume/element uses this
 					// to detect if a reactive prop has been set, and if so will not
 					// overwrite the value with any value from custom element
@@ -251,20 +240,10 @@ function _reactive(prototype: ObjWithReactifiedProps, propName: string, descript
 			  },
 	}
 
-	if (!prototype.__reactifiedProps__) prototype.__reactifiedProps__ = new Set()
-	prototype.__reactifiedProps__.add(propName)
+	if (!obj.__reactifiedProps__) obj.__reactifiedProps__ = new Set()
+	obj.__reactifiedProps__.add(propName)
 
-	// If a TypeScript decorator is called on a property, then returning a descriptor does
-	// nothing, so we need to set the descriptor manually. We'll do it for Babel decorators too.
-	if (calledAsPropertyDecorator) Object.defineProperty(prototype, propName, descriptor)
-	// If a TypeScript decorator is called on an accessor or method, then we must return a
-	// descriptor in order to modify it, and doing it manually won't work.
-	else return descriptor
-	// Weird, huh?
-	// This will change with updates to the ES decorators proposal, https://github.com/tc39/proposal-decorators
-
-	// Explicit return to satisfy TS noImplicitReturn.
-	return
+	Object.defineProperty(obj, propName, descriptor)
 }
 
 function __getReactiveVar<T>(instance: Obj<Variable<T>>, vName: string, initialValue: T = undefined!): Variable<T> {
@@ -281,7 +260,10 @@ function __getReactiveVar<T>(instance: Obj<Variable<T>>, vName: string, initialV
 }
 
 type AnyClass = new (...args: any[]) => object
-type AnyClassWithReactiveProps = (new (...args: any[]) => object) & {reactiveProperties?: string[]}
+type AnyClassWithReactiveProps = (new (...args: any[]) => object) & {
+	reactiveProperties?: string[]
+	__isReactive__?: true
+}
 
 // Define (or unshadow) reactive accessors on obj, which is generally `this`
 // inside of a constructor (this is what the documentation prescribes).
@@ -291,16 +273,11 @@ export function reactify(obj: Obj, propsOrClass: string[] | AnyClassWithReactive
 	if (isClass(propsOrClass)) {
 		const Class = propsOrClass
 
-		// For properties that were defined as reactive with the @reactive
-		// decorator, this deletes properties on the instance that were set as
-		// class fields with [[Define]] semantics or before a custom element was
-		// upgraded (because such properties override the reactive accessors on
-		// the object's prototype), so that these properties' values will
-		// trigger the reactive setters.
-		let props = classReactiveProps.get(Class)
-		if (props) unshadowReactiveAccessors(obj, props)
+		// let props = classReactiveProps.get(Class)
+		// if (props) unshadowReactiveAccessors(obj, props)
+		// props = Class.reactiveProperties
 
-		props = Class.reactiveProperties
+		const props = Class.reactiveProperties
 		if (Array.isArray(props)) createReactiveAccessors(obj, props)
 	} else {
 		const props = propsOrClass
@@ -312,16 +289,6 @@ export function reactify(obj: Obj, propsOrClass: string[] | AnyClassWithReactive
 
 function isClass(obj: unknown): obj is AnyClass {
 	return typeof obj == 'function'
-}
-
-function unshadowReactiveAccessors(obj: Obj, props: string[]) {
-	for (const prop of props) {
-		if (obj.hasOwnProperty(prop)) {
-			const initialValue = obj[prop]
-			delete obj[prop]
-			obj[prop] = initialValue
-		}
-	}
 }
 
 // Defines a reactive accessor on obj.
