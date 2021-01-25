@@ -25,7 +25,8 @@
 		"release:major": "lume releaseMajor",
 		"version": "lume versionHook",
 		"postversion": "lume postVersionHook",
-		"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX OTHER SCRIPTS": ""
+		"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX OTHER SCRIPTS": "",
+		"prepare": "npm run build"
 	},
 	"COMMENT dependencies": "dom-expressions shouldn't be a direct dependency, but needs to be for now due to https://github.com/ryansolid/dom-expressions/issues/25",
 	"dependencies": {
