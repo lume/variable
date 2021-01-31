@@ -502,7 +502,7 @@ describe('@lume/variable', () => {
 	})
 })
 
-function testButterflyProps(b: {colors: number; wingSize: number}) {
+function testButterflyProps(b: {colors: number; wingSize: number; _wingSize: number}) {
 	let count = 0
 
 	autorun(() => {
@@ -513,6 +513,7 @@ function testButterflyProps(b: {colors: number; wingSize: number}) {
 
 	expect(b.colors).toBe(3, 'initial colors value')
 	expect(b.wingSize).toBe(2, 'initial wingSize value')
+	expect(b._wingSize).toBe(2, 'ensure the original accessor works')
 	expect(count).toBe(1, 'Should be reactive')
 
 	b.colors++
@@ -523,5 +524,6 @@ function testButterflyProps(b: {colors: number; wingSize: number}) {
 	b.wingSize++
 
 	expect(b.wingSize).toBe(3, 'incremented wingSize value')
+	expect(b._wingSize).toBe(3, 'ensure the original accessor works')
 	expect(count).toBe(3, 'Should be reactive')
 }
