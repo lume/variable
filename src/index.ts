@@ -1,4 +1,5 @@
 import * as SOLID from 'solid-js'
+import {getInheritedDescriptor} from 'lowclass'
 import {getGlobal} from './getGlobal.js'
 
 const global = getGlobal() as any
@@ -143,10 +144,14 @@ function reactiveClassFinisher(Class: AnyClassWithReactiveProps) {
 function _reactive(obj: ObjWithReactifiedProps, propName: string): void {
 	const vName = 'v_' + propName
 
-	// TODO If prototype already has vName, skip making an accessor.
-	// if (prototype[vName] !== undefined) return
+	// XXX If obj already has vName, skip making an accessor? I think perhaps
+	// not, because a subclass might override a property so it is not reactive,
+	// and a further subclass might want to make it reactive again in which
+	// case returning early would cause the subclass subclass's property not to
+	// be reactive.
+	// if (obj[vName] !== undefined) return
 
-	let descriptor = Object.getOwnPropertyDescriptor(obj, propName)
+	let descriptor: PropertyDescriptor | undefined = getInheritedDescriptor(obj, propName)
 
 	let originalGet: (() => any) | undefined
 	let originalSet: ((v: any) => void) | undefined

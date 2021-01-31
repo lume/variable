@@ -32,6 +32,7 @@
 	"dependencies": {
 		"dom-expressions": "^0.24.0",
 		"lit-dom-expressions": "^0.24.0",
+		"lowclass": "^4.9.3",
 		"solid-js": "^0.23.0"
 	},
 	"devDependencies": {
