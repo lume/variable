@@ -330,4 +330,4 @@ type ObjWithReactifiedProps<T = unknown> = Obj<T> & {__reactifiedProps__?: Set<s
  */
 export const untrack = _untrack
 
-export const version = '0.5.3'
+export const version = '0.5.4'
