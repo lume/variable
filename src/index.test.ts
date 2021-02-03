@@ -21,16 +21,50 @@ describe('@lume/variable', () => {
 			// prefer.
 			num.set(3)
 			expect(num.get()).toBe(3)
+		})
 
-			// The get and set methods are useful, for example, if you'd like to expose only
-			// one or the other to external code, but not both (making
-			// them write-only or read-only).
-
+		it('object destructuring convenience', async () => {
 			let count: () => number
 
 			// Example: The following block scope exposes only the getter.
 			{
+				// The get and set functions are useful, for example, if you'd
+				// like to expose only one or the other to external code, but
+				// not both (making them write-only or read-only).
 				const {get, set} = variable(0)
+
+				// Expose the getter to the outside.
+				count = get
+
+				Promise.resolve().then(() => {
+					set(1)
+					set(count() + 1)
+					set(3)
+				})
+			}
+
+			// On the outside, we can only read the variable's value.
+			let expectedCount = -1
+			autorun(() => {
+				expectedCount++
+				expect(count()).toBe(expectedCount)
+			})
+
+			await Promise.resolve()
+
+			expect(count()).toBe(3)
+			expect(expectedCount).toBe(3)
+		})
+
+		it('array destructuring convenience', async () => {
+			let count: () => number
+
+			// Example: The following block scope exposes only the getter.
+			{
+				// The get and set functions are useful, for example, if you'd
+				// like to expose only one or the other to external code, but
+				// not both (making them write-only or read-only).
+				const [get, set] = variable(0)
 
 				// Expose the getter to the outside.
 				count = get

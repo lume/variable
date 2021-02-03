@@ -6,21 +6,29 @@ const global = getGlobal() as any
 const Solid: typeof SOLID = global.SOLID ?? (global.SOLID = SOLID)
 const {createSignal, createEffect, createRoot, untrack: _untrack} = Solid
 
+export interface VariableGetter<T> {
+	(): T
+}
+
+export interface VariableSetter<T> {
+	(value: T): T
+}
+
 /** Represents a reactive variable. The value is set or gotten depending on passing an arg or no arg. */
-export interface Variable<T = any> {
+export interface Variable<T = any> extends Iterable<VariableGetter<T> | VariableSetter<T>> {
 	/** Gets the variable value. */
 	(value?: undefined): T
 	/** Sets the variable value. */
 	(value: T): T
 	(value?: T): void | T
 
-	get(): T
-	set(value: T): T
+	get: VariableGetter<T>
+	set: VariableSetter<T>
 
-	// TODO, for array destructuring convenience
-	// [0](): T
-	// [1](value: T): T
-	// [Symbol.iterator]() {...}
+	// For array destructuring convenience
+	[0]: VariableGetter<T>
+	[1]: VariableSetter<T>
+	[Symbol.iterator](): IterableIterator<VariableGetter<T> | VariableSetter<T>>
 }
 
 function readVariable<T>(this: Variable<T>): T {
@@ -51,13 +59,22 @@ export function variable<T>(value: T) {
 	}
 
 	// WTF TypeScript, why do I need `any` here.
-	variable.get = readVariable.bind(variable as any) as any
-	variable.set = writeVariable.bind(variable as any) as any
-	// TODO, for array destructuring convenience
-	// variable[0] = read.bind(variable as any) as any
-	// variable[1] = write.bind(variable as any) as any
+	const getter = readVariable.bind(variable as any) as VariableGetter<T>
+	const setter = writeVariable.bind(variable as any) as VariableSetter<T>
 
-	return variable
+	// For object destructuring convenience.
+	variable.get = getter
+	variable.set = setter
+
+	// For array destructuring convenience.
+	variable[0] = getter
+	variable[1] = setter
+	variable[Symbol.iterator] = function*() {
+		yield variable[0]
+		yield variable[1]
+	}
+
+	return variable as [VariableGetter<T>, VariableSetter<T>] & Variable<T>
 }
 
 export type Computation = (previousValue?: unknown) => unknown
