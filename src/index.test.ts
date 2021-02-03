@@ -1,4 +1,4 @@
-import {variable, autorun, reactive, reactify} from './index.js'
+import {variable, autorun, reactive, reactify, circular} from './index.js'
 
 describe('@lume/variable', () => {
 	describe('variable()', () => {
@@ -87,6 +87,48 @@ describe('@lume/variable', () => {
 
 			expect(count()).toBe(3)
 			expect(expectedCount).toBe(3)
+		})
+	})
+
+	describe('circular()', () => {
+		it('allows two variables to be synced to each other (two-way binding)', () => {
+			const number = variable(0)
+			const double = variable(0)
+
+			let count = 0
+
+			// Runs once initially.
+			autorun(() => {
+				count++
+				number()
+				double()
+			})
+
+			// This causes the previous autorun to run one more time when it syncs the vars.
+			circular(
+				number,
+				() => number(double() / 2),
+				double,
+				() => double(number() * 2),
+			)
+
+			expect(count).toBe(2)
+
+			// Causes the autorun to run two more times, because both variables
+			// get modified.
+			number(2)
+			expect(count).toBe(4)
+
+			expect(number()).toBe(2)
+			expect(double()).toBe(4)
+
+			// Causes the autorun to run two more times, because both variables
+			// get modified.
+			double(2)
+			expect(count).toBe(6)
+
+			expect(number()).toBe(1)
+			expect(double()).toBe(2)
 		})
 	})
 

@@ -347,4 +347,34 @@ type ObjWithReactifiedProps<T = unknown> = Obj<T> & {__reactifiedProps__?: Set<s
  */
 export const untrack = _untrack
 
+/**
+ * Allow two reactive variables to depend on each other's values, without
+ * causing an infinite loop.
+ */
+export function circular<Type>(
+	first: VariableGetter<Type>,
+	setFirst: (v: Type) => void,
+	second: VariableGetter<Type>,
+	setSecond: (v: Type) => void,
+): StopFunction {
+	let initial = true
+
+	const stop1 = autorun(() => {
+		const v = first()
+		if (initial && !(initial = false)) setSecond(v)
+		else initial = true
+	})
+
+	const stop2 = autorun(() => {
+		const v = second()
+		if (initial && !(initial = false)) setFirst(v)
+		else initial = true
+	})
+
+	return function stop() {
+		stop1()
+		stop2()
+	}
+}
+
 export const version = '0.5.6'
