@@ -48,12 +48,12 @@ autorun(() => {
 
 ```js
 autorun(() => {
-	// This re-runs only with firstName or lastName have changed.
+	// This re-runs only when firstName or lastName have changed.
 	console.log(firstName(), lastName())
 })
 
 autorun(() => {
-	// This re-runs only with age or hairColor have changed.
+	// This re-runs only when age or hairColor have changed.
 	console.log(age(), hairColor())
 })
 ```
