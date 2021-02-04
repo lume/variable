@@ -396,7 +396,7 @@ class Martian {
 const martian = new Martian()
 
 autorun {
-    // Log the three variables every time any of the three change.
+	// Log the three variables every time any of the three change.
 	console.log(martian.firstName, martian.hairColor, martian.favoriteFood)
 }
 ```
@@ -415,7 +415,7 @@ class Martian {
 const martian = new Martian()
 
 autorun {
-    // Log the three variables every time any of the three change.
+	// Log the three variables every time any of the three change.
 	console.log(martian.firstName, martian.hairColor, martian.favoriteFood)
 }
 ```
@@ -425,7 +425,7 @@ example was synchronous, the next one deferrs updates to the next microtask:
 
 ```js
 defer autorun {
-    // Log the three variables every time any of the three change.
+	// Log the three variables every time any of the three change.
 	console.log(martian.firstName, martian.hairColor, martian.favoriteFood)
 }
 ```
