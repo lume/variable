@@ -59,9 +59,9 @@ autorun(() => {
 ```
 
 We can stop an `autorun` from re-running if we need to by calling their
-returned stop function (note, this isn't necessary if we no longer have
-references to any of the `autorun`'s dependencies, and in that case everything
-will be garbage collected):
+returned stop function (note, this is not necessary if we or the JS engine no
+longer have references to any of the `autorun`'s dependencies, and in that case
+everything will be garbage collected):
 
 ```js
 import {variable, autorun} from '@lume/variable'
