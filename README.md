@@ -295,11 +295,11 @@ martian.addEventHandler('change:hairColor', onChange)
 martian.addEventHandler('change:favoriteFood', onChange)
 ```
 
-This is better because now if other properties besides the ones we've
-subscribed to change, the event pattern won't be calling our function
+This is better than before because now if other properties besides the ones
+we've subscribed to change, the event pattern won't be calling our function
 needlessly and we won't be doing property name checks every time.
 
-We can still do better.
+We can still do better!
 
 We can come up with an automatic event-wiring mechanism. It may be something
 like the following:
@@ -333,9 +333,9 @@ martian.addEventHandler('change:hairColor', onChange)
 martian.addEventHandler('change:favoriteFood', onChange)
 ```
 
-That is a lot shorter already.
+That is a lot shorter already, but we can still do better!
 
-We can do a little better and make it more
+We can make it more
 [DRY](https://en.wikipedia.org/wiki/Don%27t_repeat_yourself) using decorators:
 
 ```js
@@ -364,15 +364,12 @@ martian.addEventHandler('change:hairColor', onChange)
 martian.addEventHandler('change:favoriteFood', onChange)
 ```
 
-This is better because we didn't have to repeat the property names twice.
-Instead we labeled them all with the same decorator.
-
-This is better, but we still have to subscribe our event handler to all the
-events with the `addEventHandler` calls.
+This is better than before because now we didn't have to repeat the property
+names twice. Instead we labeled them all with the a decorator.
 
 ---
 
-We can still do better.
+We can still do better!
 
 With LUME's reactive variables we can further decouple a class's implementation from
 the reactivity mechanism and make things cleaner.
@@ -399,21 +396,21 @@ autorun(() => {
 })
 ```
 
-This is even better because now the reactivity is not an inherent part of our
-particular class. We can use the reactivity in our `Matrian` class, or in any
-other class, without having class inheritance requirements, and other
+This is better than before because the reactivity is not an inherent part of
+our particular class. We can use the reactivity in our `Matrian` class, or in
+any other class, without having class inheritance requirements, and other
 developers do not have to make subclasses of our classes just to have
 reactivity.
 
-Plus, we did not need to perform any subscribe an event listener to specific
+Plus, we did not need to subscribe an event listener to specific
 events like we did earlier with the `addEventHandler` calls. Instead, we
 wrapped our function with `autorun` and it became a "reactive computation" with
 the ability to re-run when its dependencies (the reactive variables used within
 it) change.
 
-We can still do better!
+...We can still do better!...
 
-Using LUME's decorators, the experience is as good as it can get:
+Using LUME's decorators, the experience is as good as it gets:
 
 ```js
 import {variable, autorun, reactive} from '@lume/variable'
@@ -435,17 +432,18 @@ autorun(() => {
 })
 ```
 
-This is better because now we can use the properties like regular properties
-instead of having to call them to read their values (like we had to in the
-previous example). For example `this.age` instead of `this.age()` for reading a
-value, and `this.age = 10` instead of `this.age(10)` for writing a value.
+This is better than before because now we can use the properties like regular
+properties instead of having to call them to read their values (like we had to
+in the previous example). We can write `this.age` instead of `this.age()` for
+reading a value, and `this.age = 10` instead of `this.age(10)` for writing a
+value.
 
-It can't get much better than this. Well, it actually can, see the API section
+It can not get better than this. Well, it actually can, see the API section
 (coming soon).
 
-(And actually, things could possibly get simpler if JavaScript (EcmasScript) were to
-adopt dependency-tracking reactive computing into the language itself, but
-I'll leave that as an exercise for our imagination.)
+(And actually, things could possibly get simpler if JavaScript (EcmasScript)
+were to adopt dependency-tracking reactive computing into the language itself,
+but I'll leave that as an exercise for our imagination.)
 
 <details><summary><a href="#">Ok I couldn't help it. A built-in language feature might look like follows:</a></summary>
 
