@@ -445,7 +445,7 @@ It can not get better than this. Well, it actually can, see the API section
 were to adopt dependency-tracking reactive computing into the language itself,
 but I'll leave that as an exercise for our imagination.)
 
-<details><summary><a href="#">Ok I couldn't help it. A built-in language feature might look like follows:</a></summary>
+<details><summary>Ok I couldn't help it. A built-in language feature might look like follows. (Click to open.)</summary>
 
 Perhaps using built-in decorators and an `autorun` keyword:
 
