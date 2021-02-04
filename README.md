@@ -229,9 +229,9 @@ It works, but we can do better.
 
 Let's say we want to make it more performant: instead of all event handlers
 being subscribed to a single `change` event (because Martians probably have
-lots and lots of properties) and filtering for the properties want care to
-observe, we can choose specific event names for each property and let handlers
-be subscribed to specific property events:
+lots and lots of properties) and filtering for the properties we care to
+observe, we can choose specific event names for each property and subscribe
+handlers to specific property events:
 
 ```js
 import {EventEmitter} from 'events'
@@ -295,29 +295,31 @@ martian.addEventHandler('change:hairColor', onChange)
 martian.addEventHandler('change:favoriteFood', onChange)
 ```
 
-This is better because now if other properties besides those ones change we've
-subscribed to, the event pattern won't be calling our function needlessly and
-we won't be doing property name checks all the time.
+This is better because now if other properties besides the ones we've
+subscribed to change, the event pattern won't be calling our function
+needlessly and we won't be doing property name checks every time.
 
 We can still do better.
 
-We can come up with an automatic event-wiring mechanism. Whatever we come up
-with, it'll be something like the following:
+We can come up with an automatic event-wiring mechanism. It may be something
+like the following:
 
 ```js
 import {EventEmitter, WithEventProps} from 'events'
 
 // Imagine `WithEventProps` wires up events for the specified properties.
 
-class Martian extends WithEventProps(EventEmitter) {
-	static eventProps = [firstName, lastName, age, hairColor, favoriteFood]
+const Martian = WithEventProps(
+	class Martian extends EventEmitter {
+		static eventProps = [firstName, lastName, age, hairColor, favoriteFood]
 
-	firstName = ''
-	lastName = ''
-	age = 0
-	hairColor = ''
-	favoriteFood = ''
-}
+		firstName = ''
+		lastName = ''
+		age = 0
+		hairColor = ''
+		favoriteFood = ''
+	},
+)
 
 const martian = new Martian()
 
@@ -339,8 +341,9 @@ We can do a little better and make it more
 ```js
 import {EventEmitter, emits} from 'events'
 
-// Imagine `emits` wires up an event for a decorated propertiy.
+// Imagine `emits` wires up an event for each decorated propertiy.
 
+@emits
 class Martian extends EventEmitter {
 	@emits firstName = ''
 	@emits lastName = ''
@@ -362,10 +365,10 @@ martian.addEventHandler('change:favoriteFood', onChange)
 ```
 
 This is better because we didn't have to repeat the property names twice.
-Instead we labeled them with a decorator.
+Instead we labeled them all with the same decorator.
 
-This is better, but we still have the bits of `addEventHandler` to deal with at
-the end.
+This is better, but we still have to subscribe our event handler to all the
+events with the `addEventHandler` calls.
 
 ---
 
@@ -398,12 +401,15 @@ autorun(() => {
 
 This is even better because now the reactivity is not an inherent part of our
 particular class. We can use the reactivity in our `Matrian` class, or in any
-other class, without touching having to modify any other class's hierarchy.
+other class, without having class inheritance requirements, and other
+developers do not have to make subclasses of our classes just to have
+reactivity.
 
-Plus, we did not need to perform any event listener registration like we did
-earlier with the `addEventHandler` calls in the event pattern examples.
-Instead, we wrapped our function with `autorun` and it became a "reactive
-computation" that re-runs when its dependencies change.
+Plus, we did not need to perform any subscribe an event listener to specific
+events like we did earlier with the `addEventHandler` calls. Instead, we
+wrapped our function with `autorun` and it became a "reactive computation" with
+the ability to re-run when its dependencies (the reactive variables used within
+it) change.
 
 We can still do better!
 
@@ -431,13 +437,17 @@ autorun(() => {
 
 This is better because now we can use the properties like regular properties
 instead of having to call them to read their values (like we had to in the
-previous example).
+previous example). For example `this.age` instead of `this.age()` for reading a
+value, and `this.age = 10` instead of `this.age(10)` for writing a value.
 
-(Well, things could possibly get simpler if JavaScript (EcmasScript) were to
+It can't get much better than this. Well, it actually can, see the API section
+(coming soon).
+
+(And actually, things could possibly get simpler if JavaScript (EcmasScript) were to
 adopt dependency-tracking reactive computing into the language itself, but
-we'll leave that as an exercise for our imagination.)
+I'll leave that as an exercise for our imagination.)
 
-<details><summary>Ok I couldn't help it. A built-in language feature might look like follows:</summary>
+<details><summary><a href="#">Ok I couldn't help it. A built-in language feature might look like follows:</a></summary>
 
 Perhaps using built-in decorators and an `autorun` keyword:
 
@@ -458,7 +468,7 @@ autorun {
 }
 ```
 
-Or maybe without decorators, only key words:
+Or maybe without decorators, only keywords:
 
 ```js
 class Martian {
@@ -477,8 +487,11 @@ autorun {
 }
 ```
 
-Maybe even we get options to make it synchronous or deferred. If the previous
-example was synchronous, the next one deferrs updates to the next microtask:
+Maybe even we get options to make an autorun synchronous or deferred. If the
+previous example was synchronous, then the next one defers re-running to the
+next microtask (so that we get a single batched re-run instead of one per
+variable change, which has better performance at the cost of making the code
+harder to understand or allowing race conditions):
 
 ```js
 defer autorun {
