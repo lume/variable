@@ -322,7 +322,8 @@ Not bad. It is already better than before. But you still have the bits of
 ---
 
 What if I told you... that with reactive variables you can decouple the class
-implementation from reactivity make it even cleaner?
+implementation from reactivity (no need to extends a particular base class) and
+make it all even cleaner?
 
 With LUME's reactive variables, you can write the previous non-decorator
 example like the following, without your class having to extend a base class:
@@ -372,10 +373,12 @@ autorun(() => {
 })
 ```
 
-Holy smokes! That is short and clean!
+Holy smokes! That is short and clean! And no event listener setup needed at the
+end!
 
 (Well, it could get simpler if JavaScript (EcmasScript) were to adopt
-dependency-tracking reactive computing into the language itself, but we'll leave that as an exercise for your imagination.)
+dependency-tracking reactive computing into the language itself, but we'll
+leave that as an exercise for your imagination.)
 
 <details><summary>Ok I couldn't help it. A built-in language feature might look like this:</summary>
 
