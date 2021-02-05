@@ -377,4 +377,4 @@ export function circular<Type>(
 	}
 }
 
-export const version = '0.5.9'
+export const version = '0.5.10'
