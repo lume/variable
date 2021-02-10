@@ -33,7 +33,7 @@
 		"dom-expressions": "^0.24.0",
 		"lit-dom-expressions": "^0.24.0",
 		"lowclass": "^4.9.4",
-		"solid-js": "^0.23.0"
+		"solid-js": "^0.24.4"
 	},
 	"devDependencies": {
 		"@lume/cli": "^0.3.0",
