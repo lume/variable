@@ -31,8 +31,10 @@ Calling `count()` gets the current value, while calling `count(123)` with an
 arg sets the value. Thus `count(count() + 1)` increments the value.
 
 This works because the `autorun` registers any reactive variables used inside
-the function as "dependencies", Any time a dependency in an autorun changes,
+the function as "dependencies", then any time a dependency in an autorun changes,
 the autorun re-runs the fun.
+
+This is called "dependency-tracking reactivity".
 
 An autorun with multiple variables accessed inside of it will re-run any time
 any of the accessed variables change:
