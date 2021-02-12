@@ -313,7 +313,7 @@ import {EventEmitter, WithEventProps} from 'events'
 
 const Martian = WithEventProps(
 	class Martian extends EventEmitter {
-		static eventProps = [firstName, lastName, age, hairColor, favoriteFood]
+		static eventProps = ['firstName', 'lastName', 'age', 'hairColor', 'favoriteFood']
 
 		firstName = ''
 		lastName = ''
@@ -343,7 +343,7 @@ We can make it more
 ```js
 import {EventEmitter, emits} from 'events'
 
-// Imagine `emits` wires up an event for each decorated propertiy.
+// Imagine `emits` wires up an event for each decorated property.
 
 @emits
 class Martian extends EventEmitter {
@@ -367,7 +367,7 @@ martian.addEventHandler('change:favoriteFood', onChange)
 ```
 
 This is better than before because now we didn't have to repeat the property
-names twice. Instead we labeled them all with the a decorator.
+names twice. Instead we labeled them all with a decorator.
 
 ---
 
