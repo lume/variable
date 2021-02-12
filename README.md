@@ -7,7 +7,7 @@ Make reactive variables and react to their changes.
 ## React to changes in reactive variables
 
 In the following we make a reactive variable `count`, increment its value every
-second, and re-run a piece a piece of code that logs the value to the console
+second, and re-run a piece of code that logs the value to the console
 on each change:
 
 ```js
