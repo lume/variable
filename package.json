@@ -1,7 +1,7 @@
 {
 	"name": "@lume/variable",
 	"version": "0.6.0",
-	"description": "Create and react to reactive variables.",
+	"description": "Create reactive variables and react their changes.",
 	"author": "Joe Pea <joe@trusktr.io>",
 	"license": "MIT",
 	"homepage": "http://github.com/lume/variable#readme",
