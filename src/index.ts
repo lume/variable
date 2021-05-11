@@ -69,7 +69,7 @@ export function variable<T>(value: T) {
 	// For array destructuring convenience.
 	variable[0] = getter
 	variable[1] = setter
-	variable[Symbol.iterator] = function*() {
+	variable[Symbol.iterator] = function* () {
 		yield variable[0]
 		yield variable[1]
 	}
@@ -222,7 +222,7 @@ function _reactive(obj: ObjWithReactifiedProps, propName: string): void {
 		enumerable: true,
 		...descriptor,
 		get: originalGet
-			? function(this: any): unknown {
+			? function (this: any): unknown {
 					// track reactivity, but get the value from the original getter
 
 					// XXX this causes initialValue to be held onto even if the original
@@ -234,12 +234,12 @@ function _reactive(obj: ObjWithReactifiedProps, propName: string): void {
 
 					return originalGet!.call(this)
 			  }
-			: function(this: any): unknown {
+			: function (this: any): unknown {
 					const v = __getReactiveVar(this, vName, initialValue)
 					return v()
 			  },
 		set: originalSet
-			? function(this: any, newValue: unknown) {
+			? function (this: any, newValue: unknown) {
 					originalSet!.call(this, newValue)
 
 					const v = __getReactiveVar(this, vName)
@@ -253,7 +253,7 @@ function _reactive(obj: ObjWithReactifiedProps, propName: string): void {
 					if (!this.__propsSetAtLeastOnce__) this.__propsSetAtLeastOnce__ = new Set<string>()
 					this.__propsSetAtLeastOnce__.add(propName)
 			  }
-			: function(this: any, newValue: unknown) {
+			: function (this: any, newValue: unknown) {
 					const v = __getReactiveVar(this, vName)
 					v(newValue)
 
