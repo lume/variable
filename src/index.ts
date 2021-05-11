@@ -52,11 +52,11 @@ function writeVariable<T>(this: Variable<T>, value: T): T {
 export function variable<T>(value: T) {
 	const [get, set] = createSignal<T>(value)
 
-	const variable: Variable<T> = (value?: T) => {
+	const variable = ((value?: T) => {
 		if (typeof value === 'undefined') return get()
 		set(value)
 		return value
-	}
+	}) as Variable<T>
 
 	// WTF TypeScript, why do I need `any` here.
 	const getter = readVariable.bind(variable as any) as VariableGetter<T>
