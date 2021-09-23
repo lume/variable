@@ -23,25 +23,25 @@ autorun(() => {
 })
 ```
 
-The function (sometimes referred to as "an autorun" or "a computation") passed
-into autorun automatically re-runs every second due to `count` being
+The function passed into `autorun` (sometimes referred to as "an autorun" or "a
+computation") automatically re-runs every second due to `count` being
 incremented every second.
 
 Calling `count()` gets the current value, while calling `count(123)` with an
 arg sets the value. Thus `count(count() + 1)` increments the value.
 
-This works because the `autorun` registers any reactive variables used inside
-the function as "dependencies", then any time a dependency in an autorun changes,
-the autorun re-runs the fun.
+Any reactive variables used inside an autorun function are registered (or
+"tracked") as "dependencies" by `autorun`, then any time those dependencies
+change, the autorun re-runs.
 
-This is called "dependency-tracking reactivity".
+We call this "dependency-tracking reactivity".
 
 An autorun with multiple variables accessed inside of it will re-run any time
 any of the accessed variables change:
 
 ```js
 autorun(() => {
-	// Log the variables every time any of them change.
+	// Log these variables every time any of them change.
 	console.log(firstName(), lastName(), age(), hairColor())
 })
 ```
@@ -60,10 +60,11 @@ autorun(() => {
 })
 ```
 
-We can stop an `autorun` from re-running, if we need to, by calling its
-returned stop function (note, this is not necessary if we or the JS engine no
-longer have references to any of the `autorun`'s dependencies, and in that case
-everything will be garbage collected and will no longer re-run):
+If we wish to stop an `autorun` from re-running, we can call its returned stop
+function (note, this is not necessary if we or the JS engine no longer have
+references to any of the reactive variables that are dependencies of the
+`autorun`, and in that case everything will be garbage collected and will no
+longer re-run):
 
 ```js
 import {variable, autorun} from '@lume/variable'
@@ -83,44 +84,65 @@ setTimeout(stop, 5000)
 
 ## Power and Simplicity
 
-Reactive computations (autoruns) are nice because it doesn't matter how we
-group variables (dependencies). What matters is we write what we care about
-(expressions using our variables) and don't have to think much about how to
-wire things up.
+Learn how dependency-tracking reactivity makes your code cleaner and more
+concise compared to another more common pattern.
 
-For example, an event pattern, in contrast, can be more verbose and less
-convenient. Here's the same thing with some sort of event pattern:
+<details><summary>Click to expand.</summary>
+
+<br />
+
+Reactive computations (autoruns) are nice because it doesn't matter how we
+group our variables (dependencies) within computations. What matters is we
+write what we care about (expressions using our variables) without having
+to think about how to wire reactivity up.
+
+With an event-based pattern, in contrast, our code would be more verbose and less
+convenient.
+
+Looking back at our simple autorun for logging several variables,
+
+```js
+autorun(() => {
+	// Log these variables every time any of them change.
+	console.log(firstName(), lastName(), age(), hairColor())
+})
+```
+
+we will see that writing the same thing with some sort of event pattern is more verbose:
 
 ```js
 function log() {
-	// Log the variables every time any of them change.
+	// Log these variables every time any of them change.
 	console.log(firstName.value, lastName.value, age.value, hairColor.value)
 }
 
+// We need to also register an event handler for each value we care to react to:
 firstName.on('change', log)
 lastName.on('change', log)
 age.on('change', log)
 hairColor.on('change', log)
 ```
 
-It isn't as clean. With an event pattern we had to figure how to share the
-function to wire it up to each event emitter.
+With this hypothetical event pattern, we had to share our logging function with
+each event emitter in order to wire up the reactivity, having us write more
+code. Using `autorun` was simpler and less verbose.
 
-Let's say we want to add one more item to the console.log statement. Here is
-how it would be with an autorun:
+Now let's say we want to add one more item to the `console.log` statement.
+
+Here is what that looks like with an autorun:
 
 ```js
 autorun(() => {
-	// Log the variables every time any of them change.
+	// Log these variables every time any of them change.
 	console.log(firstName(), lastName(), age(), hairColor(), favoriteFood())
 })
 ```
 
-In contrast, here's how it would be with an event pattern:
+With an event emitter pattern, there is more to do:
 
 ```js
 function log() {
-	// Log the variables every time any of them change.
+	// Log these variables every time any of them change.
 	console.log(firstName.value, lastName.value, age.value, hairColor.value, favoriteFood.value)
 }
 
@@ -128,13 +150,14 @@ firstName.on('change', log)
 lastName.on('change', log)
 age.on('change', log)
 hairColor.on('change', log)
-favoriteFood.on('change', log) // Don't forget to add this line too!
+favoriteFood.on('change', log) // <-------- Don't forget to add this line too!
 ```
 
-We can see the event pattern is more error prone (we can forget to register the
-event handler).
+Not only is the event pattern more verbose, but it is more error prone because
+we can forget to register the event handler: we had to modify the code in two
+places in order to add logging of the `favoriteFood` value.
 
-Here's where it gets interesting.
+Here's where it gets interesting!
 
 Reactive computations allow us to decouple the reactivity implementation from
 places where we need reactivity, and to focus on the code we want to write.
@@ -142,29 +165,31 @@ places where we need reactivity, and to focus on the code we want to write.
 Let's say we want to make a class with properties, and abserve any of them when
 they change.
 
-First, let's try a tried-and-true event pattern:
+First, let's use a familiar event pattern to show the less-than-ideal scenario first:
 
 ```js
 // Let's say this is in a lib called 'events'.
 class EventEmitter {
-	addEventHandler() {
-		/*...imagination...*/
+	addEventHandler(eventName, fn) {
+		/*...use imagination here...*/
 	}
-	removeEventHandler() {
-		/*...imagination...*/
+	removeEventHandler(eventName, fn) {
+		/*...use imagination here...*/
 	}
-	emit() {
-		/*...imagination...*/
+	emit(eventName, data) {
+		/*...use imagination here...*/
 	}
 }
 ```
 
-Now let's use it to make a class whose poperties we can observe the changes of.
+Now let's use `EventEmitter` to make a class whose poperties we can observe the
+changes of. In the following class, we'll make getter/setter pairs so that any
+time a setter is used to set a value, it will emit a "change" event.
 
 ```js
 import {EventEmitter} from 'events'
 
-// We have to extend from EventEmitter (or we could compose it, but the amount
+// We need to extend from EventEmitter (or compose it inside the class, but the amount
 // of code would be similar).
 class Martian extends EventEmitter {
 	_firstName = ''
@@ -173,7 +198,7 @@ class Martian extends EventEmitter {
 	}
 	set firstName(v) {
 		this._firstName = v
-		this.emit('change', 'firstName')
+		this.emit('change', 'firstName') // Emit any time the property is set.
 	}
 
 	_lastName = ''
@@ -216,20 +241,21 @@ class Martian extends EventEmitter {
 const martian = new Martian()
 ```
 
-Now let's react to changes in three of the five properties of a `Martian`:
+The following shows how we would react to changes in three of the five properties of a `Martian`:
 
 ```js
 martian.addEventHandler('change', property => {
 	if (['firstName', 'hairColor', 'favoriteFood'].includes(property)) {
-		// Log the three variables every time any of the three change.
+		// Log these three variables every time any of the three change.
 		console.log(martian.firstName, martian.hairColor, martian.favoriteFood)
 	}
 })
 ```
 
-It works, but we can do better.
+It works, but we can still make this better while still using the same event
+pattern.
 
-Let's say we want to make it more performant: instead of all event handlers
+Let's say we want to make it more efficient: instead of all event handlers
 being subscribed to a single `change` event (because Martians probably have
 lots and lots of properties) and filtering for the properties we care to
 observe, we can choose specific event names for each property and subscribe
@@ -245,7 +271,7 @@ class Martian extends EventEmitter {
 	}
 	set firstName(v) {
 		this._firstName = v
-		this.emit('change:firstName')
+		this.emit('change:firstName') // Emit a specific event for the firstName property.
 	}
 
 	_lastName = ''
@@ -254,7 +280,7 @@ class Martian extends EventEmitter {
 	}
 	set lastName(v) {
 		this._lastName = v
-		this.emit('change:lastName')
+		this.emit('change:lastName') // Similar for the lastName property.
 	}
 
 	_age = 0
@@ -263,7 +289,7 @@ class Martian extends EventEmitter {
 	}
 	set age(v) {
 		this._age = v
-		this.emit('change:age')
+		this.emit('change:age') // And so on.
 	}
 
 	_hairColor = ''
@@ -284,11 +310,15 @@ class Martian extends EventEmitter {
 		this.emit('change:favoriteFood')
 	}
 }
+```
 
+We can now avoid the overhead of the array filtering we previously had with the `.includes` check:
+
+```js
 const martian = new Martian()
 
 const onChange = () => {
-	// Log the three variables every time any of the three change.
+	// Log these three variables every time any of the three change.
 	console.log(martian.firstName, martian.hairColor, martian.favoriteFood)
 }
 
@@ -301,16 +331,17 @@ This is better than before because now if other properties besides the ones
 we've subscribed to change, the event pattern won't be calling our function
 needlessly and we won't be doing property name checks every time.
 
-We can still do better!
+We can still do better with the event pattern! (Spoiler: it won't get as clean
+as with `autorun` below, which we'll get to next.)
 
-We can come up with an automatic event-wiring mechanism. It may be something
-like the following:
+We can come up with an automatic event-wiring mechanism. It could look
+something like the following:
 
 ```js
 import {EventEmitter, WithEventProps} from 'events'
 
-// Imagine `WithEventProps` wires up events for the specified properties.
-
+// Imagine `WithEventProps` wires up events for any properties specified in a
+// static `eventProps` field:
 const Martian = WithEventProps(
 	class Martian extends EventEmitter {
 		static eventProps = ['firstName', 'lastName', 'age', 'hairColor', 'favoriteFood']
@@ -323,10 +354,12 @@ const Martian = WithEventProps(
 	},
 )
 
+// Listen to events as before:
+
 const martian = new Martian()
 
 const onChange = () => {
-	// Log the three variables every time any of the three change.
+	// Log these three variables every time any of the three change.
 	console.log(martian.firstName, martian.hairColor, martian.favoriteFood)
 }
 
@@ -335,16 +368,17 @@ martian.addEventHandler('change:hairColor', onChange)
 martian.addEventHandler('change:favoriteFood', onChange)
 ```
 
-That is a lot shorter already, but we can still do better!
+That is a lot shorter already, but we can still do better! (It still won't be
+as simple as with dependency-tracking reactivity, which is coming up.)
 
-We can make it more
-[DRY](https://en.wikipedia.org/wiki/Don%27t_repeat_yourself) using decorators:
+We can make the event pattern more
+[DRY](https://en.wikipedia.org/wiki/Don%27t_repeat_yourself) ("Don't Repeat
+Yourself") using decorators to allow us to be less repetitive:
 
 ```js
 import {EventEmitter, emits} from 'events'
 
-// Imagine `emits` wires up an event for each decorated property.
-
+// Imagine this `@emits` decorator wires up an event for each decorated property.
 @emits
 class Martian extends EventEmitter {
 	@emits firstName = ''
@@ -354,10 +388,12 @@ class Martian extends EventEmitter {
 	@emits favoriteFood = ''
 }
 
+// Listen to events as before:
+
 const martian = new Martian()
 
 const onChange = () => {
-	// Log the three variables every time any of the three change.
+	// Log these three variables every time any of the three change.
 	console.log(martian.firstName, martian.hairColor, martian.favoriteFood)
 }
 
@@ -367,21 +403,25 @@ martian.addEventHandler('change:favoriteFood', onChange)
 ```
 
 This is better than before because now we didn't have to repeat the property
-names twice. Instead we labeled them all with a decorator.
+names twice, reducing the chance of errors from mismatched names. Instead we
+labeled them all with a decorator.
 
 ---
 
-We can still do better!
+We can still do better! 🤯
 
 With LUME's reactive variables we can further decouple a class's implementation from
 the reactivity mechanism and make things cleaner.
 
-We can re-write the previous non-decorator example so that our class does not
-need to extend from a particular base class to have reactivity:
+We can re-write the previous non-decorator example (and still not using
+decorators) so that our class does not need to extend from a particular base
+class to inherit a reactivity implementation:
 
 ```js
 import {variable, autorun} from '@lume/variable'
 
+// This class does not extend from any base class. Instead, reactive variables
+// are defined inside the class.
 class Martian {
 	firstName = variable('')
 	lastName = variable('')
@@ -393,16 +433,16 @@ class Martian {
 const martian = new Martian()
 
 autorun(() => {
-	// Log the three variables every time any of the three change.
+	// Log these three variables every time any of the three change.
 	console.log(martian.firstName(), martian.hairColor(), martian.favoriteFood())
 })
 ```
 
 This is better than before because the reactivity is not an inherent part of
-our particular class. We can use the reactivity in our `Matrian` class, or in
-any other class, without having class inheritance requirements, and other
-developers do not have to make subclasses of our classes just to have
-reactivity.
+our class hierarchy, instead being a feature of the reactive variables. We can
+use this form of reactivity in our `Matrian` class or in any other class
+without having class inheritance requirements, and other developers do not have
+to make subclasses of our classes just to have reactivity.
 
 Plus, we did not need to subscribe an event listener to specific
 events like we did earlier with the `addEventHandler` calls. Instead, we
@@ -410,13 +450,14 @@ wrapped our function with `autorun` and it became a "reactive computation" with
 the ability to re-run when its dependencies (the reactive variables used within
 it) change.
 
-...We can still do better!...
+...We can still do better! 🤯...
 
 Using LUME's decorators, the experience is as good as it gets:
 
 ```js
 import {variable, autorun, reactive} from '@lume/variable'
 
+// Now we mark the class and properties as reactive with the `@reactive` decorator.
 @reactive
 class Martian {
 	@reactive firstName = ''
@@ -424,80 +465,80 @@ class Martian {
 	@reactive age = 0
 	@reactive hairColor = ''
 	@reactive favoriteFood = ''
+
+	// This property is not reactive, as it is not marked with `@reactive`.
+	cryogenesis = false
 }
 
 const martian = new Martian()
 
 autorun(() => {
-	// Log the three variables every time any of the three change.
-	console.log(martian.firstName, martian.hairColor, martian.favoriteFood)
+	// Log these four variables every time any of the first three change. Note
+	// that this will not automatically rerun when cryogenesis changes because cryogenesis
+	// is not reactive.
+	console.log(martian.firstName, martian.hairColor, martian.favoriteFood, martian.cryogenesis)
 })
 ```
 
 This is better than before because now we can use the properties like regular
-properties instead of having to call them to read their values (like we had to
-in the previous example). We can write `this.age` instead of `this.age()` for
-reading a value, and `this.age = 10` instead of `this.age(10)` for writing a
-value.
+properties instead of having to call them as functions to read their values
+like we had to in the prior example. We can write `this.age` instead of
+`this.age()` for reading a value, and `this.age = 10` instead of `this.age(10)`
+for writing a value.
 
-It can not get better than this. Well, it actually can, see the API section
-(coming soon).
-
-(And actually, things could possibly get simpler if JavaScript (EcmasScript)
-were to adopt dependency-tracking reactive computing into the language itself,
-but I'll leave that as an exercise for our imagination.)
-
-<details><summary>Ok I couldn't help it. A built-in language feature might look like follows. (Click to open.)</summary>
-
-Perhaps using built-in decorators and an `autorun` keyword:
-
-```js
-class Martian {
-	@reactive firstName = ''
-	@reactive lastName = ''
-	@reactive age = 0
-	@reactive hairColor = ''
-	@reactive favoriteFood = ''
-}
-
-const martian = new Martian()
-
-autorun {
-	// Log the three variables every time any of the three change.
-	console.log(martian.firstName, martian.hairColor, martian.favoriteFood)
-}
-```
-
-Or maybe without decorators, only keywords:
-
-```js
-class Martian {
-	reactive firstName = ''
-	reactive lastName = ''
-	reactive age = 0
-	reactive hairColor = ''
-	reactive favoriteFood = ''
-}
-
-const martian = new Martian()
-
-autorun {
-	// Log the three variables every time any of the three change.
-	console.log(martian.firstName, martian.hairColor, martian.favoriteFood)
-}
-```
-
-Maybe even we get options to make an autorun synchronous or deferred. If the
-previous example was synchronous, then the next one defers re-running to the
-next microtask (so that we get a single batched re-run instead of one per
-variable change, which has better performance at the cost of making the code
-harder to understand or allowing race conditions):
-
-```js
-defer autorun {
-	// Log the three variables every time any of the three change.
-	console.log(martian.firstName, martian.hairColor, martian.favoriteFood)
-}
-```
+Dependency-tracking reactivity makes things nice and concise.
 
 </details>
+
+## API
+
+### `const myVar = variable(value)`
+
+Creates a reactive variable with an initial `value`. The return value is a function that
+
+- when called with no argument, returns the reactive variable's value, f.e. `myVar()`.
+- when called with an argument, sets the reactive variable's value, f.e. `myVar(newValue)`.
+
+```js
+const foo = variable(false)
+const bar = variable(123)
+```
+
+### `const stop = autorun(fn)`
+
+Takes a function `fn` and immediately runs it, while tracking any reactive
+variables that were used inside of it as dependencies. Any time those variables
+change, `fn` is executed again. Each time `fn` re-runs, dependencies are
+re-tracked, which means that conditional branching within `fn` can change which
+dependencies will re-run `fn` next time.
+
+`autorun` returns a `stop` function that when called causes `fn` never to be
+automatically executed again. This is useful when you no longer care about some
+variables.
+
+```js
+autorun(() => {
+	if (foo()) doSomethingWith(bar())
+})
+```
+
+### `@reactive`
+
+A decorator that makes properties in a class reactive. Besides decorating
+properties with the decorator, also be sure to decorate the class that shall
+have reactive variable with the same decorator as well.
+
+```js
+@reactive
+class Car {
+	@reactive engineOn = false
+	@reactive sound = 'vroom'
+}
+
+const car = new Car()
+
+autorun(() => {
+	// Any time the car turns on, it makes a sound.
+	if (car.engineOn) console.log(car.sound)
+})
+```
