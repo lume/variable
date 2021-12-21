@@ -50,11 +50,11 @@ function writeVariable<T>(this: Variable<T>, value: T): T {
  */
 // eslint-disable-next-line typescript/explicit-function-return-type
 export function variable<T>(value: T) {
-	const [get, set] = createSignal<T>(value, { equals: false })
+	const [get, set] = createSignal<T>(value, {equals: false})
 
 	const variable = ((value?: T) => {
-		if (typeof value === 'undefined') return get()
-		set(() => value)
+		if (!arguments.length) return get()
+		set(() => value!)
 		return value
 	}) as Variable<T>
 
