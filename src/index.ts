@@ -53,8 +53,8 @@ export function variable<T>(value: T) {
 	const [get, set] = createSignal<T>(value, {equals: false})
 
 	const variable = ((value?: T) => {
-		if (!arguments.length) return get()
-		set(() => value!)
+		if (typeof value === 'undefined') return get()
+		set(() => value)
 		return value
 	}) as Variable<T>
 
