@@ -1,10 +1,5 @@
-import * as SOLID from 'solid-js'
 import {getInheritedDescriptor} from 'lowclass'
-import {getGlobal} from './getGlobal.js'
-
-const global = getGlobal() as any
-const Solid: typeof SOLID = global.SOLID ?? (global.SOLID = SOLID)
-const {createSignal, createEffect, createRoot, untrack: _untrack} = Solid
+import {createSignal, createEffect, createRoot, untrack as _untrack} from 'solid-js'
 
 export interface VariableGetter<T> {
 	(): T

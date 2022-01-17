@@ -28,10 +28,8 @@
 		"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX OTHER SCRIPTS": "",
 		"prepare": "npm run build"
 	},
-	"COMMENT dependencies": "dom-expressions shouldn't be a direct dependency, but needs to be for now due to https://github.com/ryansolid/dom-expressions/issues/25",
 	"dependencies": {
-		"dom-expressions": "^0.24.0",
-		"lit-dom-expressions": "^0.24.0",
+		"lit-dom-expressions": "^0.31.0",
 		"lowclass": "^4.9.4",
 		"solid-js": "^1.0.0"
 	},
