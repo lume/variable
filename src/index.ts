@@ -47,6 +47,7 @@ function writeVariable<T>(this: Variable<T>, value: T): T {
 export function variable<T>(value: T) {
 	const [get, set] = createSignal<T>(value, {equals: false})
 
+	// FIXME, read arguments.length instead of detecting undefined values, because currently undefined value trigger a read, which means decoraators built on this treat `this.foo = undefined` as a read instead of a write.
 	const variable = ((value?: T) => {
 		if (typeof value === 'undefined') return get()
 		set(() => value)
