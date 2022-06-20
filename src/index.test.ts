@@ -1,3 +1,4 @@
+import {untrack} from 'solid-js'
 import {variable, autorun, reactive, reactify, circular} from './index.js'
 
 describe('@lume/variable', () => {
@@ -203,6 +204,159 @@ describe('@lume/variable', () => {
 			const b = new Butterfly()
 
 			testButterflyProps(b)
+		})
+
+		it('show that reactify makes an infinite reactivity loop when used manually', () => {
+			class Foo {
+				amount = 3
+
+				constructor() {
+					reactify(this, ['amount'])
+				}
+			}
+
+			class Bar extends Foo {
+				double = 0
+
+				constructor() {
+					super()
+					reactify(this, ['double'])
+					this.double = this.amount * 2 // this tracks access of .amount
+				}
+			}
+
+			let count = 0
+
+			function loop() {
+				autorun(() => {
+					new Bar() // this reads and writes, causing an infinite loop
+					count++
+				})
+			}
+
+			count
+
+			expect(loop).toThrowError(RangeError)
+			expect(count).toBeGreaterThan(1)
+		})
+
+		it('show how to manually untrack constructors when not using decorators', () => {
+			class Foo {
+				amount = 3
+
+				constructor() {
+					reactify(this, ['amount'])
+				}
+			}
+
+			class Bar extends Foo {
+				double = 0
+
+				constructor() {
+					super()
+					reactify(this, ['double'])
+
+					untrack(() => {
+						this.double = this.amount * 2
+					})
+				}
+			}
+
+			let count = 0
+
+			function noLoop() {
+				autorun(() => {
+					new Bar() // this reads and writes, causing an infinite loop
+					count++
+				})
+			}
+
+			expect(noLoop).not.toThrow()
+			expect(count).toBe(1)
+		})
+
+		it('automatically does not track reactivity in constructors when using decorators', () => {
+			@reactive
+			class Foo {
+				@reactive amount = 3
+			}
+
+			@reactive
+			class Bar extends Foo {
+				@reactive double = 0
+
+				constructor() {
+					super()
+					this.double = this.amount * 2 // this read of .amount should not be tracked
+				}
+			}
+
+			let b: Bar
+			let count = 0
+
+			function noLoop() {
+				autorun(() => {
+					b = new Bar() // this should not track
+					count++
+				})
+			}
+
+			expect(noLoop).not.toThrow()
+
+			const b2 = b!
+
+			b!.amount = 4 // hence this should not trigger
+
+			// If the effect ran only once initially, not when setting b.colors,
+			// then both variables should reference the same instance
+			expect(b!).toBe(b2)
+			expect(count).toBe(1)
+		})
+
+		it('automatically does not track reactivity in constructors when using decorators even when not the root most decorator', () => {
+			@reactive
+			class Foo {
+				@reactive amount = 3
+			}
+
+			function someOtherDecorator(Class: any) {
+				console.log(Class)
+				if (arguments.length === 1 && 'kind' in Class && Class.kind === 'class')
+					return {...Class, finisher: (Klass: any) => class Foo extends Klass {}}
+				return class Foo extends Class {}
+			}
+
+			@someOtherDecorator
+			@reactive
+			class Bar extends Foo {
+				@reactive double = 0
+
+				constructor() {
+					super()
+					this.double = this.amount * 2 // this read of .amount should not be tracked
+				}
+			}
+
+			let b: Bar
+			let count = 0
+
+			function noLoop() {
+				autorun(() => {
+					b = new Bar() // this should not track
+					count++
+				})
+			}
+
+			expect(noLoop).not.toThrow()
+
+			const b2 = b!
+
+			b!.amount = 4 // hence this should not trigger
+
+			// If the effect ran only once initially, not when setting b.colors,
+			// then both variables should reference the same instance
+			expect(b!).toBe(b2)
+			expect(count).toBe(1)
 		})
 
 		it('makes class properties reactive, not using any decorators, specified in the constructor', () => {

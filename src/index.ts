@@ -1,5 +1,5 @@
 import {getInheritedDescriptor} from 'lowclass'
-import {createSignal, createEffect, createRoot, untrack as _untrack} from 'solid-js'
+import {createSignal, createEffect, createRoot, untrack as _untrack, getListener} from 'solid-js'
 
 export interface VariableGetter<T> {
 	(): T
@@ -148,13 +148,23 @@ function reactiveClassFinisher(Class: AnyClassWithReactiveProps) {
 		static __isReactive__: true = true
 
 		constructor(...args: any[]) {
+			if (getListener()) {
+				return untrack(() => {
+					const self = Reflect.construct(Class, args, new.target) // super()
+					reactify(self, Class)
+					return self
+				})
+			}
+
 			super(...args)
 			reactify(this, Class)
 		}
 	}
 }
 
-function _reactive(obj: ObjWithReactifiedProps, propName: string): void {
+function _reactive(obj: ObjWithReactifiedProps, propName: PropertyKey): void {
+	if (typeof propName !== 'string') throw new Error('TODO: support for non-string fields with @reactive decorator')
+
 	const vName = 'v_' + propName
 
 	// XXX If obj already has vName, skip making an accessor? I think perhaps
@@ -285,9 +295,9 @@ type AnyClassWithReactiveProps = (new (...args: any[]) => object) & {
 
 // Define (or unshadow) reactive accessors on obj, which is generally `this`
 // inside of a constructor (this is what the documentation prescribes).
-export function reactify<T>(obj: T, props: string[]): typeof obj
+export function reactify<T>(obj: T, props: (keyof T)[]): typeof obj
 export function reactify<C extends AnyClass>(obj: InstanceType<C>, ctor: C): typeof obj
-export function reactify(obj: Obj, propsOrClass: string[] | AnyClassWithReactiveProps) {
+export function reactify(obj: Obj, propsOrClass: PropertyKey[] | AnyClassWithReactiveProps) {
 	if (isClass(propsOrClass)) {
 		const Class = propsOrClass
 
@@ -310,7 +320,7 @@ function isClass(obj: unknown): obj is AnyClass {
 }
 
 // Defines a reactive accessor on obj.
-function createReactiveAccessors(obj: ObjWithReactifiedProps, props: string[]) {
+function createReactiveAccessors(obj: ObjWithReactifiedProps, props: PropertyKey[]) {
 	for (const prop of props) {
 		if (obj.__reactifiedProps__?.has(prop)) continue
 
@@ -321,7 +331,7 @@ function createReactiveAccessors(obj: ObjWithReactifiedProps, props: string[]) {
 }
 
 type Obj<T = unknown> = Record<PropertyKey, T> & {constructor: AnyClass}
-type ObjWithReactifiedProps<T = unknown> = Obj<T> & {__reactifiedProps__?: Set<string>}
+type ObjWithReactifiedProps<T = unknown> = Obj<T> & {__reactifiedProps__?: Set<PropertyKey>}
 
 /**
  * When untrack() is used inside an autorun(), dependencies for code inside the
