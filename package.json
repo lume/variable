@@ -29,7 +29,6 @@
 		"prepare": "npm run build"
 	},
 	"dependencies": {
-		"lit-dom-expressions": "^0.31.0",
 		"lowclass": "^4.9.4",
 		"solid-js": "^1.0.0"
 	},
