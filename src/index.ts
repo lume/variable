@@ -1,5 +1,7 @@
 import {getInheritedDescriptor} from 'lowclass'
-import {createSignal, createEffect, createRoot, untrack as _untrack, getListener} from 'solid-js'
+import {createSignal, createEffect, createRoot, untrack, getListener} from 'solid-js'
+
+export * from 'solid-js'
 
 export interface VariableGetter<T> {
 	(): T
@@ -332,26 +334,6 @@ function createReactiveAccessors(obj: ObjWithReactifiedProps, props: PropertyKey
 
 type Obj<T = unknown> = Record<PropertyKey, T> & {constructor: AnyClass}
 type ObjWithReactifiedProps<T = unknown> = Obj<T> & {__reactifiedProps__?: Set<PropertyKey>}
-
-/**
- * When untrack() is used inside an autorun(), dependencies for code inside the
- * untrack() block will not be tracked although the code still runs when the
- * autorun runs. For example:
- *
- * ```js
- * autorun(() => {
- *   // This autorun will re-run whenever someVar changes...
- *   console.log(someVar())
- *
- *   untrack(() => {
- *     // ...but not when otherVar changes, although this logic still fires any
- *     // time the autorun re-runs.
- *     console.log(otherVar())
- *   })
- * })
- * ```
- */
-export const untrack = _untrack
 
 /**
  * Allow two reactive variables to depend on each other's values, without
