@@ -1,4 +1,4 @@
-import {getInheritedDescriptor} from 'lowclass'
+import {Constructor, getInheritedDescriptor} from 'lowclass'
 import {createSignal, createEffect, createRoot, untrack, getListener} from 'solid-js'
 
 export * from 'solid-js'
@@ -102,7 +102,57 @@ export function autorun(f: Computation): StopFunction {
 	return stop!
 }
 
-export function reactive(protoOrClassElement: any, propName?: string, _descriptor?: PropertyDescriptor): any {
+interface DecoratorContext {
+	kind: 'class' | 'method' | 'getter' | 'setter' | 'field' | 'accessor'
+	name: string | symbol
+	access: Access
+	private?: boolean
+	static?: boolean
+	addInitializer?(initializer: () => void): void
+}
+
+interface Access {
+	get?(): unknown
+	set?(value: unknown): void
+}
+
+interface Accessor {
+	get(): unknown
+	set(value: unknown): void
+}
+
+type DecoratedValue = Constructor | Function | Accessor | undefined
+
+const reactiveProps = new Map<string | symbol, unknown>()
+
+export function reactive(...args: any[]): any {
+	const [value, {kind, name}] = args as [DecoratedValue, DecoratorContext]
+
+	console.log('stage 3!', value, kind)
+
+	if (kind === 'class') {
+		return class Reactive extends (value as Constructor) {
+			constructor(...args: any[]) {
+				super(...args)
+
+				// @ts-ignore TODO
+				reactify2(this, reactiveProps)
+				console.log('made props reactive', this, value, name, reactiveProps)
+				reactiveProps.clear()
+			}
+		}
+	} else if (kind === 'field') {
+		return function (this: object, initialValue: unknown) {
+			// _trackReactiveProperty(this.constructor as any, name)
+			reactiveProps.set(name, initialValue)
+		}
+	} else if (kind === 'accessor') {
+	} else if (kind === 'getter') {
+	} else if (kind === 'setter') {
+	} else {
+		throw new TypeError('The @reactive decorator is only for classes, fields, accessors, getters, and setters.')
+	}
+
 	// If used as a newer Babel decorator
 	const isDecoratorV2 = arguments.length === 1 && 'kind' in protoOrClassElement
 	if (isDecoratorV2) {
@@ -137,7 +187,7 @@ export function reactive(protoOrClassElement: any, propName?: string, _descripto
 	_trackReactiveProperty(Class, propName!)
 }
 
-export function _trackReactiveProperty(Class: AnyClassWithReactiveProps, propName: string) {
+export function _trackReactiveProperty(Class: AnyClassWithReactiveProps, propName: string | symbol) {
 	if (!Class.reactiveProperties || !Class.hasOwnProperty('reactiveProperties')) Class.reactiveProperties = []
 	if (!Class.reactiveProperties.includes(propName)) Class.reactiveProperties.push(propName)
 }
@@ -291,7 +341,7 @@ function __getReactiveVar<T>(instance: Obj<Variable<T>>, vName: string, initialV
 
 type AnyClass = new (...args: any[]) => object
 type AnyClassWithReactiveProps = (new (...args: any[]) => object) & {
-	reactiveProperties?: string[]
+	reactiveProperties?: (string | symbol)[]
 	__isReactive__?: true
 }
 
@@ -317,6 +367,12 @@ export function reactify(obj: Obj, propsOrClass: PropertyKey[] | AnyClassWithRea
 	return obj
 }
 
+export function reactify2<T extends object>(obj: T, props: Map<string | symbol, unknown>): T {
+	// @ts-ignore TODO
+	createReactiveAccessors2(obj, props)
+	return obj
+}
+
 function isClass(obj: unknown): obj is AnyClass {
 	return typeof obj == 'function'
 }
@@ -327,8 +383,24 @@ function createReactiveAccessors(obj: ObjWithReactifiedProps, props: PropertyKey
 		if (obj.__reactifiedProps__?.has(prop)) continue
 
 		const initialValue = obj[prop]
+		console.log('initial value:', obj, initialValue)
 		_reactive(obj, prop)
+		console.log('value after reactify:', obj, obj[prop])
 		obj[prop] = initialValue
+		console.log('value after restore initial:', obj, obj[prop])
+	}
+}
+
+function createReactiveAccessors2(obj: ObjWithReactifiedProps, props: Map<string | symbol, unknown>) {
+	for (const [prop, initialValue] of props) {
+		if (obj.__reactifiedProps__?.has(prop)) continue
+
+		// const initialValue = obj[prop]
+		console.log('initial value:', obj, initialValue)
+		_reactive(obj, prop)
+		console.log('value after reactify:', obj, obj[prop])
+		obj[prop] = initialValue
+		console.log('value after restore initial:', obj, obj[prop])
 	}
 }
 
@@ -364,5 +436,28 @@ export function circular<Type>(
 		stop2()
 	}
 }
+
+@reactive
+class Foo {
+	@reactive foo = 123
+}
+
+@reactive
+class Bar extends Foo {
+	@reactive bar = 456
+}
+
+export {Foo}
+
+const b = new Bar()
+
+createEffect(() => {
+	console.log('values:', b.foo, b.bar)
+})
+
+setInterval(() => {
+	console.log('set the damn value')
+	b.bar++
+}, 1000)
 
 export const version = '0.7.3'
