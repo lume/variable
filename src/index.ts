@@ -1,8 +1,6 @@
 import {getInheritedDescriptor} from 'lowclass'
 import {createSignal, createEffect, createRoot, untrack, getListener} from 'solid-js'
 
-export * from 'solid-js'
-
 export interface VariableGetter<T> {
 	(): T
 }
