@@ -24,9 +24,7 @@
 		"release:minor": "lume releaseMinor",
 		"release:major": "lume releaseMajor",
 		"version": "lume versionHook",
-		"postversion": "lume postVersionHook",
-		"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX OTHER SCRIPTS": "",
-		"prepare": "npm run build"
+		"postversion": "lume postVersionHook"
 	},
 	"dependencies": {
 		"lowclass": "^4.9.4",
