@@ -154,6 +154,7 @@ export function reactive(...args: any[]): any {
 	}
 
 	// If used as a newer Babel decorator
+	// CONTINUE this is broken code, protoOrClassElement is not defined, but who cares, we're gonna remove it, and move on with classy-solid
 	const isDecoratorV2 = arguments.length === 1 && 'kind' in protoOrClassElement
 	if (isDecoratorV2) {
 		const classElement = protoOrClassElement
