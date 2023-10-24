@@ -27,7 +27,7 @@
 		"postversion": "lume postVersionHook"
 	},
 	"dependencies": {
-		"lowclass": "^4.9.4",
+		"lowclass": "^6.0.0",
 		"solid-js": "<1.5.0"
 	},
 	"devDependencies": {
