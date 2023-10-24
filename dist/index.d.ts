@@ -28,6 +28,6 @@ declare type AnyClassWithReactiveProps = (new (...args: any[]) => object) & {
 export declare function reactify<T>(obj: T, props: (keyof T)[]): typeof obj;
 export declare function reactify<C extends AnyClass>(obj: InstanceType<C>, ctor: C): typeof obj;
 export declare function circular<Type>(first: VariableGetter<Type>, setFirst: (v: Type) => void, second: VariableGetter<Type>, setSecond: (v: Type) => void): StopFunction;
-export declare const version = "0.9.0";
+export declare const version = "0.10.0";
 export {};
 //# sourceMappingURL=index.d.ts.map
