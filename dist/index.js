@@ -205,5 +205,5 @@ export function circular(first, setFirst, second, setSecond) {
         stop2();
     };
 }
-export const version = '0.10.0';
+export const version = '0.10.1';
 //# sourceMappingURL=index.js.map
