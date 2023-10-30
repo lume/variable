@@ -338,6 +338,7 @@ describe('@lume/variable', () => {
                     this.colors = 3;
                     this._wingSize = 2;
                 }
+                static { this.reactiveProperties = ['colors', 'wingSize']; }
                 get wingSize() {
                     return this._wingSize;
                 }
@@ -345,7 +346,6 @@ describe('@lume/variable', () => {
                     this._wingSize = s;
                 }
             };
-            Butterfly.reactiveProperties = ['colors', 'wingSize'];
             Butterfly = __decorate([
                 reactive
             ], Butterfly);
@@ -358,6 +358,7 @@ describe('@lume/variable', () => {
                     this.colors = 3;
                     this._wingSize = 2;
                 }
+                static { this.reactiveProperties = ['colors', 'wingSize']; }
                 get wingSize() {
                     return this._wingSize;
                 }
@@ -365,7 +366,6 @@ describe('@lume/variable', () => {
                     this._wingSize = s;
                 }
             };
-            Butterfly.reactiveProperties = ['colors', 'wingSize'];
             Butterfly = __decorate([
                 reactive,
                 __metadata("design:paramtypes", [])
@@ -380,6 +380,7 @@ describe('@lume/variable', () => {
                     this._wingSize = 2;
                     reactify(this, Butterfly);
                 }
+                static { this.reactiveProperties = ['colors', 'wingSize']; }
                 get wingSize() {
                     return this._wingSize;
                 }
@@ -387,7 +388,6 @@ describe('@lume/variable', () => {
                     this._wingSize = s;
                 }
             }
-            Butterfly.reactiveProperties = ['colors', 'wingSize'];
             const b = new Butterfly();
             testButterflyProps(b);
         });
@@ -398,6 +398,7 @@ describe('@lume/variable', () => {
                     this._wingSize = 2;
                     reactify(this, Butterfly);
                 }
+                static { this.reactiveProperties = ['colors', 'wingSize']; }
                 get wingSize() {
                     return this._wingSize;
                 }
@@ -405,7 +406,6 @@ describe('@lume/variable', () => {
                     this._wingSize = s;
                 }
             }
-            Butterfly.reactiveProperties = ['colors', 'wingSize'];
             const b = new Butterfly();
             testButterflyProps(b);
         });
@@ -578,16 +578,16 @@ function testButterflyProps(b) {
         b.wingSize;
         count++;
     });
-    expect(b.colors).toBe(3, 'initial colors value');
-    expect(b.wingSize).toBe(2, 'initial wingSize value');
-    expect(b._wingSize).toBe(2, 'ensure the original accessor works');
-    expect(count).toBe(1, 'Should be reactive');
+    expect(b.colors).toBe(3);
+    expect(b.wingSize).toBe(2);
+    expect(b._wingSize).toBe(2);
+    expect(count).toBe(1);
     b.colors++;
-    expect(b.colors).toBe(4, 'incremented colors value');
-    expect(count).toBe(2, 'Should be reactive');
+    expect(b.colors).toBe(4);
+    expect(count).toBe(2);
     b.wingSize++;
-    expect(b.wingSize).toBe(3, 'incremented wingSize value');
-    expect(b._wingSize).toBe(3, 'ensure the original accessor works');
-    expect(count).toBe(3, 'Should be reactive');
+    expect(b.wingSize).toBe(3);
+    expect(b._wingSize).toBe(3);
+    expect(count).toBe(3);
 }
 //# sourceMappingURL=index.test.js.map

@@ -1,6 +1,12 @@
 import {untrack} from 'solid-js'
 import {variable, autorun, reactive, reactify, circular} from './index.js'
 
+// TODO move type def to @lume/cli, map @types/jest's `expect` type into the
+// global env.
+declare global {
+	function expect(...args: any[]): any
+}
+
 describe('@lume/variable', () => {
 	describe('variable()', () => {
 		it('has gettable and settable values', async () => {
@@ -741,19 +747,19 @@ function testButterflyProps(b: {colors: number; wingSize: number; _wingSize: num
 		count++
 	})
 
-	expect(b.colors).toBe(3, 'initial colors value')
-	expect(b.wingSize).toBe(2, 'initial wingSize value')
-	expect(b._wingSize).toBe(2, 'ensure the original accessor works')
-	expect(count).toBe(1, 'Should be reactive')
+	expect(b.colors).toBe(3)
+	expect(b.wingSize).toBe(2)
+	expect(b._wingSize).toBe(2)
+	expect(count).toBe(1)
 
 	b.colors++
 
-	expect(b.colors).toBe(4, 'incremented colors value')
-	expect(count).toBe(2, 'Should be reactive')
+	expect(b.colors).toBe(4)
+	expect(count).toBe(2)
 
 	b.wingSize++
 
-	expect(b.wingSize).toBe(3, 'incremented wingSize value')
-	expect(b._wingSize).toBe(3, 'ensure the original accessor works')
-	expect(count).toBe(3, 'Should be reactive')
+	expect(b.wingSize).toBe(3)
+	expect(b._wingSize).toBe(3)
+	expect(count).toBe(3)
 }

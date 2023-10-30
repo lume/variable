@@ -43,9 +43,8 @@ export function reactive(protoOrClassElement, propName, _descriptor) {
         return {
             ...classElement,
             finisher(Class) {
-                var _a, _b;
                 _trackReactiveProperty(Class, classElement.key);
-                return (_b = (_a = classElement.finisher) === null || _a === void 0 ? void 0 : _a.call(classElement, Class)) !== null && _b !== void 0 ? _b : Class;
+                return classElement.finisher?.(Class) ?? Class;
             },
         };
     }
@@ -63,24 +62,22 @@ export function _trackReactiveProperty(Class, propName) {
         Class.reactiveProperties.push(propName);
 }
 function reactiveClassFinisher(Class) {
-    var _a;
     if (Class.hasOwnProperty('__isReactive__'))
         return Class;
-    return _a = class ReactiveDecoratorFinisher extends Class {
-            constructor(...args) {
-                if (getListener()) {
-                    return untrack(() => {
-                        const self = Reflect.construct(Class, args, new.target);
-                        reactify(self, Class);
-                        return self;
-                    });
-                }
-                super(...args);
-                reactify(this, Class);
+    return class ReactiveDecoratorFinisher extends Class {
+        constructor(...args) {
+            if (getListener()) {
+                return untrack(() => {
+                    const self = Reflect.construct(Class, args, new.target);
+                    reactify(self, Class);
+                    return self;
+                });
             }
-        },
-        _a.__isReactive__ = true,
-        _a;
+            super(...args);
+            reactify(this, Class);
+        }
+        static { this.__isReactive__ = true; }
+    };
 }
 function _reactive(obj, propName) {
     if (typeof propName !== 'string')
@@ -175,9 +172,8 @@ function isClass(obj) {
     return typeof obj == 'function';
 }
 function createReactiveAccessors(obj, props) {
-    var _a;
     for (const prop of props) {
-        if ((_a = obj.__reactifiedProps__) === null || _a === void 0 ? void 0 : _a.has(prop))
+        if (obj.__reactifiedProps__?.has(prop))
             continue;
         const initialValue = obj[prop];
         _reactive(obj, prop);
