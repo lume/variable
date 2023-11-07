@@ -15,13 +15,13 @@ export interface Variable<T = any> extends Iterable<VariableGetter<T> | Variable
     [Symbol.iterator](): IterableIterator<VariableGetter<T> | VariableSetter<T>>;
 }
 export declare function variable<T>(value: T): [VariableGetter<T>, VariableSetter<T>] & Variable<T>;
-export declare type Computation = (previousValue?: unknown) => unknown;
-export declare type StopFunction = () => void;
+export type Computation = (previousValue?: unknown) => unknown;
+export type StopFunction = () => void;
 export declare function autorun(f: Computation): StopFunction;
 export declare function reactive(protoOrClassElement: any, propName?: string, _descriptor?: PropertyDescriptor): any;
 export declare function _trackReactiveProperty(Class: AnyClassWithReactiveProps, propName: string): void;
-declare type AnyClass = new (...args: any[]) => object;
-declare type AnyClassWithReactiveProps = (new (...args: any[]) => object) & {
+type AnyClass = new (...args: any[]) => object;
+type AnyClassWithReactiveProps = (new (...args: any[]) => object) & {
     reactiveProperties?: string[];
     __isReactive__?: true;
 };

@@ -4,9 +4,6 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
 import { untrack } from 'solid-js';
 import { variable, autorun, reactive, reactify, circular } from './index.js';
 describe('@lume/variable', () => {
@@ -108,13 +105,13 @@ describe('@lume/variable', () => {
         });
         it('does not prevent superclass constructor from receiving subclass constructor args', () => {
             let Insect = class Insect {
+                result;
                 constructor(result) {
                     this.result = result;
                 }
             };
             Insect = __decorate([
-                reactive,
-                __metadata("design:paramtypes", [Number])
+                reactive
             ], Insect);
             class Butterfly extends Insect {
                 constructor(arg) {
@@ -126,10 +123,8 @@ describe('@lume/variable', () => {
         });
         it('makes class properties reactive, using class and property/accessor decorators', () => {
             let Butterfly = class Butterfly {
-                constructor() {
-                    this.colors = 3;
-                    this._wingSize = 2;
-                }
+                colors = 3;
+                _wingSize = 2;
                 get wingSize() {
                     return this._wingSize;
                 }
@@ -138,13 +133,10 @@ describe('@lume/variable', () => {
                 }
             };
             __decorate([
-                reactive,
-                __metadata("design:type", Object)
+                reactive
             ], Butterfly.prototype, "colors", void 0);
             __decorate([
-                reactive,
-                __metadata("design:type", Number),
-                __metadata("design:paramtypes", [Number])
+                reactive
             ], Butterfly.prototype, "wingSize", null);
             Butterfly = __decorate([
                 reactive
@@ -154,15 +146,15 @@ describe('@lume/variable', () => {
         });
         it('show that reactify makes an infinite reactivity loop when used manually', () => {
             class Foo {
+                amount = 3;
                 constructor() {
-                    this.amount = 3;
                     reactify(this, ['amount']);
                 }
             }
             class Bar extends Foo {
+                double = 0;
                 constructor() {
                     super();
-                    this.double = 0;
                     reactify(this, ['double']);
                     this.double = this.amount * 2;
                 }
@@ -180,15 +172,15 @@ describe('@lume/variable', () => {
         });
         it('show how to manually untrack constructors when not using decorators', () => {
             class Foo {
+                amount = 3;
                 constructor() {
-                    this.amount = 3;
                     reactify(this, ['amount']);
                 }
             }
             class Bar extends Foo {
+                double = 0;
                 constructor() {
                     super();
-                    this.double = 0;
                     reactify(this, ['double']);
                     untrack(() => {
                         this.double = this.amount * 2;
@@ -207,31 +199,26 @@ describe('@lume/variable', () => {
         });
         it('automatically does not track reactivity in constructors when using decorators', () => {
             let Foo = class Foo {
-                constructor() {
-                    this.amount = 3;
-                }
+                amount = 3;
             };
             __decorate([
-                reactive,
-                __metadata("design:type", Object)
+                reactive
             ], Foo.prototype, "amount", void 0);
             Foo = __decorate([
                 reactive
             ], Foo);
             let Bar = class Bar extends Foo {
+                double = 0;
                 constructor() {
                     super();
-                    this.double = 0;
                     this.double = this.amount * 2;
                 }
             };
             __decorate([
-                reactive,
-                __metadata("design:type", Object)
+                reactive
             ], Bar.prototype, "double", void 0);
             Bar = __decorate([
-                reactive,
-                __metadata("design:paramtypes", [])
+                reactive
             ], Bar);
             let b;
             let count = 0;
@@ -249,13 +236,10 @@ describe('@lume/variable', () => {
         });
         it('automatically does not track reactivity in constructors when using decorators even when not the root most decorator', () => {
             let Foo = class Foo {
-                constructor() {
-                    this.amount = 3;
-                }
+                amount = 3;
             };
             __decorate([
-                reactive,
-                __metadata("design:type", Object)
+                reactive
             ], Foo.prototype, "amount", void 0);
             Foo = __decorate([
                 reactive
@@ -269,20 +253,18 @@ describe('@lume/variable', () => {
                 };
             }
             let Bar = class Bar extends Foo {
+                double = 0;
                 constructor() {
                     super();
-                    this.double = 0;
                     this.double = this.amount * 2;
                 }
             };
             __decorate([
-                reactive,
-                __metadata("design:type", Object)
+                reactive
             ], Bar.prototype, "double", void 0);
             Bar = __decorate([
                 someOtherDecorator,
-                reactive,
-                __metadata("design:paramtypes", [])
+                reactive
             ], Bar);
             let b;
             let count = 0;
@@ -300,16 +282,16 @@ describe('@lume/variable', () => {
         });
         it('makes class properties reactive, not using any decorators, specified in the constructor', () => {
             class Butterfly {
-                constructor() {
-                    this.colors = 3;
-                    this._wingSize = 2;
-                    reactify(this, ['colors', 'wingSize']);
-                }
+                colors = 3;
+                _wingSize = 2;
                 get wingSize() {
                     return this._wingSize;
                 }
                 set wingSize(s) {
                     this._wingSize = s;
+                }
+                constructor() {
+                    reactify(this, ['colors', 'wingSize']);
                 }
             }
             const b = new Butterfly();
@@ -317,16 +299,18 @@ describe('@lume/variable', () => {
         });
         it('makes class properties reactive, with properties defined in the constructor', () => {
             class Butterfly {
-                constructor() {
-                    this.colors = 3;
-                    this._wingSize = 2;
-                    reactify(this, ['colors', 'wingSize']);
-                }
+                colors;
+                _wingSize;
                 get wingSize() {
                     return this._wingSize;
                 }
                 set wingSize(s) {
                     this._wingSize = s;
+                }
+                constructor() {
+                    this.colors = 3;
+                    this._wingSize = 2;
+                    reactify(this, ['colors', 'wingSize']);
                 }
             }
             const b = new Butterfly();
@@ -334,11 +318,9 @@ describe('@lume/variable', () => {
         });
         it('makes class properties reactive, using only class decorator, specified via static prop', () => {
             let Butterfly = class Butterfly {
-                constructor() {
-                    this.colors = 3;
-                    this._wingSize = 2;
-                }
-                static { this.reactiveProperties = ['colors', 'wingSize']; }
+                static reactiveProperties = ['colors', 'wingSize'];
+                colors = 3;
+                _wingSize = 2;
                 get wingSize() {
                     return this._wingSize;
                 }
@@ -354,38 +336,39 @@ describe('@lume/variable', () => {
         });
         it('makes class properties reactive, using only class decorator, specified via static prop, properties defined in the constructor', () => {
             let Butterfly = class Butterfly {
-                constructor() {
-                    this.colors = 3;
-                    this._wingSize = 2;
-                }
-                static { this.reactiveProperties = ['colors', 'wingSize']; }
+                static reactiveProperties = ['colors', 'wingSize'];
+                colors;
+                _wingSize;
                 get wingSize() {
                     return this._wingSize;
                 }
                 set wingSize(s) {
                     this._wingSize = s;
                 }
+                constructor() {
+                    this.colors = 3;
+                    this._wingSize = 2;
+                }
             };
             Butterfly = __decorate([
-                reactive,
-                __metadata("design:paramtypes", [])
+                reactive
             ], Butterfly);
             const b = new Butterfly();
             testButterflyProps(b);
         });
         it('makes class properties reactive, not using any decorators, specified via static prop', () => {
             class Butterfly {
-                constructor() {
-                    this.colors = 3;
-                    this._wingSize = 2;
-                    reactify(this, Butterfly);
-                }
-                static { this.reactiveProperties = ['colors', 'wingSize']; }
+                static reactiveProperties = ['colors', 'wingSize'];
+                colors = 3;
+                _wingSize = 2;
                 get wingSize() {
                     return this._wingSize;
                 }
                 set wingSize(s) {
                     this._wingSize = s;
+                }
+                constructor() {
+                    reactify(this, Butterfly);
                 }
             }
             const b = new Butterfly();
@@ -393,17 +376,19 @@ describe('@lume/variable', () => {
         });
         it('makes class properties reactive, not using any decorators, specified via static prop, properties defined in the constructor', () => {
             class Butterfly {
-                constructor() {
-                    this.colors = 3;
-                    this._wingSize = 2;
-                    reactify(this, Butterfly);
-                }
-                static { this.reactiveProperties = ['colors', 'wingSize']; }
+                static reactiveProperties = ['colors', 'wingSize'];
+                colors;
+                _wingSize;
                 get wingSize() {
                     return this._wingSize;
                 }
                 set wingSize(s) {
                     this._wingSize = s;
+                }
+                constructor() {
+                    this.colors = 3;
+                    this._wingSize = 2;
+                    reactify(this, Butterfly);
                 }
             }
             const b = new Butterfly();

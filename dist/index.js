@@ -65,6 +65,7 @@ function reactiveClassFinisher(Class) {
     if (Class.hasOwnProperty('__isReactive__'))
         return Class;
     return class ReactiveDecoratorFinisher extends Class {
+        static __isReactive__ = true;
         constructor(...args) {
             if (getListener()) {
                 return untrack(() => {
@@ -76,7 +77,6 @@ function reactiveClassFinisher(Class) {
             super(...args);
             reactify(this, Class);
         }
-        static { this.__isReactive__ = true; }
     };
 }
 function _reactive(obj, propName) {
