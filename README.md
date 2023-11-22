@@ -1,3 +1,5 @@
+# DEPRECATED, use [solid-js](https://solidjs.com/) and [classy-solid](https://github.com/lume/classy-solid) directly instead
+
 # @lume/variable
 
 Make reactive variables and react to their changes.
